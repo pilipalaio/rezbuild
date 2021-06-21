@@ -8,6 +8,7 @@ variants = []
 
 requires = [
     "build-0.3+",
+    "pip-18+",
     "python-3.6+",
 ]
 
