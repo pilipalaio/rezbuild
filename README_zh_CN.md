@@ -3,7 +3,7 @@
 Rezbuild is a python library for build rez packages. Please visit the 
 [Rez website](https://github.com/nerdvegas/rez) for more information about rez.
 
-[中文文档](https://gitlab.com/Pili-Pala/rezbuild/-/blob/main/README_zh_CN.md)
+[English](https://gitlab.com/Pili-Pala/rezbuild/-/blob/main/README.md)
 
 ## Description
 
@@ -112,81 +112,11 @@ But as this package is for rez, it doesn't make sense in most of the time.
 
 ## Running the tests
 
-### Break down into end-to-end tests
+### Break down into end to end tests
 
-WIP
-
-### Coding style tests
-
-WIP
+### And coding style tests
 
 ## Usage
-
-After 2.70.0, rez removed the bez build system. So the docs will be based on
-rez-2.70.0.
-
-Rezbuild support different build types, like build from whl file, build from
-source, or you can customize you build function.
-
-### Build from python wheel file
-
-I assume that you already know what is rez, how to make a package.py, and now
-you want to build a python package come from the internet.
-
-Fist, add a build file into you package root, just like a file named
-`build.py`. The content can be like this:
-
-```python
-# Import third-party modules
-from rezbuild import PythonWheelBuilder
-
-
-if __name__ == '__main__':
-    PythonWheelBuilder().build()
-```
-
-Then add the attribute build_command into the `package.py` file,
-content should be like this: 
-`build_command = 'python {root}/build.py {install}'`.
-
-After that, go to [PyPI](https://pypi.org) to download the wheel file and put
-the file into `source_root/rez_installers/0`. The tree should like this:
-
-```text
-source_root/
-    |___rez_installers/
-        |___0/
-            |___the_package_you_want_to_install.whl
-    |___build.py
-    |___package.py
-```
-
-Finally, run the command `rez build -i`, the package will be installed.
-
-### Build from python source code
-
-The only different between build from wheel file is the builder. Change the
-content of `build.py` like this:
-
-```python
-# Import third-party modules
-from rezbuild import PythonSourceBuilder
-
-
-if __name__ == '__main__':
-    PythonSourceBuilder().build()
-```
-
-Then ensure you already make all the necessary files to build a python package.
-Check with this 
-[tutorial](https://packaging.python.org/tutorials/packaging-projects/).
-
-Then run the command `rez build -i`, the package will be build and installed.
-
-### Custom builder
-
-You can customize a builder for you code from base builder. `RezBuilder` is the
-root builder, all the builder inherit from it. It gets the rez environment,
 
 ## Versioning
 

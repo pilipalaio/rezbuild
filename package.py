@@ -29,13 +29,13 @@ def version():
     import platform
     import sys
     from rez.resolved_context import ResolvedContext
-    r = ResolvedContext(["setuptools_scm", "git"])
+    context = ResolvedContext(["setuptools_scm", "git"])
     if platform.system() == "Windows":
         delimiter = ";"
     else:
         delimiter = ":"
-    paths = r.get_environ()["PATH"].split(delimiter)
-    pythonpaths = r.get_environ()["PYTHONPATH"].split(delimiter)
+    paths = context.get_environ()["PATH"].split(delimiter)
+    pythonpaths = context.get_environ()["PYTHONPATH"].split(delimiter)
     os.environ["PATH"] = delimiter.join(paths)
     sys.path.extend(pythonpaths)
     from setuptools_scm import get_version
