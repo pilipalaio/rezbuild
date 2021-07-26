@@ -27,8 +27,10 @@ import subprocess
 import tempfile
 
 # Import local modules
-from rezbuild.utils import remove_tree
 from rezbuild.exceptions import ArgumentError
+from rezbuild.utils import change_shabang
+from rezbuild.utils import get_delimiter
+from rezbuild.utils import remove_tree
 
 
 class RezBuilder(abc.ABC):
@@ -48,10 +50,10 @@ class RezBuilder(abc.ABC):
         self.temp_dirs = []
         super().__init__(**kwargs)
 
-    def build(self):
+    def build(self, **kwargs):
         """Build the package."""
         self.create_work_dir()
-        self.custom_build()
+        self.custom_build(**kwargs)
         self.install()
         self.clean_temp_dir()
 
@@ -60,7 +62,7 @@ class RezBuilder(abc.ABC):
         for temp_dir in self.temp_dirs:
             temp_dir.cleanup()
 
-    def custom_build(self):
+    def custom_build(self, **kwargs):
         """Execute custom build method.
 
         Raises:
@@ -260,25 +262,43 @@ class PythonSourceBuilder(PythonBuilder):
             wheel_dir = os.path.join(self.build_path, "wheel_dir")
             command = ["pyproject-build", "-o", wheel_dir]
             print(f"\nWheel create command: {' '.join(command)}")
-            subprocess.run(command, check=True, cwd=temp_src)
+            # Remove pip from environment to let venv install it.
+            subprocess.run(
+                command, check=True, cwd=temp_src,
+                env=self.get_no_pip_environment())
         wheel_file_name = [
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
 
-    def custom_build(self):
+    def custom_build(self, **kwargs):
         """Build package from source."""
         wheel_filepath = self.create_wheel()
         self.install_wheel_file(wheel_filepath, self.workspace)
         self.to_site_packages()
 
+    @staticmethod
+    def get_no_pip_environment():
+        env = dict(os.environ)
+        delimiter = get_delimiter()
+        env["PYTHONPATH"] = delimiter.join([
+            path for path in env["PYTHONPATH"].split(delimiter)
+            if "pip" not in path
+        ])
+        return env
+
 
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self):
+    def custom_build(self, is_change_shabang=False, **kwargs):
         """Build package from wheel file."""
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
         # Python installer always only one whl file.
         self.install_wheel_file(wheels[0], self.workspace)
         self.to_site_packages()
+        if is_change_shabang:
+            root = os.path.join(self.workspace, "bin")
+            for filename in os.listdir(root):
+                filepath = os.path.join(root, filename)
+                change_shabang(filepath, "/usr/bin/env python")

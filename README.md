@@ -3,7 +3,8 @@
 Rezbuild is a python library for build rez packages. Please visit the 
 [Rez website](https://github.com/nerdvegas/rez) for more information about rez.
 
-[中文文档](https://gitlab.com/Pili-Pala/rezbuild/-/blob/main/README_zh_CN.md)
+点击 [这里](https://gitlab.com/Pili-Pala/rezbuild/-/blob/main/README_zh_CN.md)
+访问 Rezbuild 的中文文档。
 
 ## Description
 
@@ -108,7 +109,8 @@ Of course, you can install this package from pip
 pip install rezbuild
 ```
 
-But as this package is for rez, it doesn't make sense in most of the time.
+As this package is for rez, install from pypi doesn't make sense in most of the
+time.
 
 ## Running the tests
 
@@ -122,7 +124,7 @@ WIP
 
 ## Usage
 
-After 2.70.0, rez removed the bez build system. So the docs will be based on
+After 2.70.0, rez removed the bez build system. So the docs is based on 
 rez-2.70.0.
 
 Rezbuild support different build types, like build from whl file, build from
@@ -185,8 +187,35 @@ Then run the command `rez build -i`, the package will be build and installed.
 
 ### Custom builder
 
-You can customize a builder for you code from base builder. `RezBuilder` is the
-root builder, all the builder inherit from it. It gets the rez environment,
+You can customize a builder for you code from base builder. 
+
+#### RezBuilder
+`RezBuilder` is the root builder, all the builder inherit from it. It gets the
+rez environment, make sure the workspace, install package, and customize you
+own build function.
+
+For example:
+```python
+# Import built-in modules
+import os
+import shutil
+
+# Import third-party modules
+from rezbuild import RezBuilder
+
+
+class CustomBuilder(RezBuilder):
+
+    def custom_build(self):
+        shutil.copytree(os.path.join(self.source_path, "src"), self.build_path)
+
+
+if __name__ == '__main__':
+    CustomBuilder().build()
+```
+
+build function will invoke the custom_build function to build the package.
+
 
 ## Versioning
 
