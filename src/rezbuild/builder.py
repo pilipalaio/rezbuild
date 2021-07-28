@@ -22,13 +22,14 @@ Rez builder help to build rez packages.
 # Import built-in modules
 import abc
 import os
+import platform
 import shutil
 import subprocess
 import tempfile
 
 # Import local modules
 from rezbuild.exceptions import ArgumentError
-from rezbuild.utils import change_shabang
+from rezbuild.utils import change_shebang
 from rezbuild.utils import get_delimiter
 from rezbuild.utils import remove_tree
 
@@ -62,6 +63,15 @@ class RezBuilder(abc.ABC):
         for temp_dir in self.temp_dirs:
             temp_dir.cleanup()
 
+    def create_work_dir(self):
+        """Create the work directory.
+
+        If the work directory already exists, remove the old one and create it.
+        """
+        if os.path.exists(self.workspace):
+            remove_tree(self.workspace)
+        os.makedirs(self.workspace)
+
     def custom_build(self, **kwargs):
         """Execute custom build method.
 
@@ -71,15 +81,6 @@ class RezBuilder(abc.ABC):
         """
         raise NotImplementedError(
             "This method does not implemented by the invoker.")
-
-    def create_work_dir(self):
-        """Create the work directory.
-
-        If the work directory already exists, remove the old one and create it.
-        """
-        if os.path.exists(self.workspace):
-            remove_tree(self.workspace)
-        os.makedirs(self.workspace)
 
     def install(self):
         """Copy files from work directory to self.install_path."""
@@ -207,6 +208,22 @@ class InstallBuilder(RezBuilder, abc.ABC):
 class PythonBuilder(RezBuilder, abc.ABC):
     """This class include some common method for build python package."""
 
+    def change_shebangs(self, root=None):
+        """Change all the shebang of entry files where in bin directory.
+
+        Args:
+            root (str): Where the entry files placed. Default is the bin
+                directory.
+        """
+        root = root or os.path.join(self.workspace, "bin")
+        for filename in os.listdir(root):
+            filepath = os.path.join(root, filename)
+            if platform.system() == "Windows":
+                # Will implemented in the future.
+                pass
+            else:
+                change_shebang(filepath, "/usr/bin/env python")
+
     @staticmethod
     def install_wheel_file(wheel_file, install_path):
         """Install the wheel.
@@ -270,11 +287,13 @@ class PythonSourceBuilder(PythonBuilder):
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
 
-    def custom_build(self, **kwargs):
+    def custom_build(self, is_change_shebang=False, **kwargs):
         """Build package from source."""
         wheel_filepath = self.create_wheel()
         self.install_wheel_file(wheel_filepath, self.workspace)
         self.to_site_packages()
+        if is_change_shebang:
+            self.change_shebangs()
 
     @staticmethod
     def get_no_pip_environment():
@@ -290,15 +309,17 @@ class PythonSourceBuilder(PythonBuilder):
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self, is_change_shabang=False, **kwargs):
-        """Build package from wheel file."""
+    def custom_build(self, is_change_shebang=False, **kwargs):
+        """Build package from wheel file.
+
+        Args:
+            is_change_shebang (bool): Whether to change shebang from bin
+                directory.
+        """
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
         # Python installer always only one whl file.
         self.install_wheel_file(wheels[0], self.workspace)
         self.to_site_packages()
-        if is_change_shabang:
-            root = os.path.join(self.workspace, "bin")
-            for filename in os.listdir(root):
-                filepath = os.path.join(root, filename)
-                change_shabang(filepath, "/usr/bin/env python")
+        if is_change_shebang:
+            self.change_shebangs()

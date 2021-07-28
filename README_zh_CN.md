@@ -11,39 +11,39 @@ to get the english document.
 
 ### 使用场景
 
-This project is a build tool to build rez packages. We always need to do some
-of the same steps when we build a rez package. Just like extract zip file,
-install the wheel file using pip, copy files to the installation directory. The
-goal of this project is to cover all the repetitive work when building rez
-package.
+rezbuild 是一个用于构建 rez 包的构建工具。我们在构建 rez 
+包时通常有很多相似的步骤，比如解压缩 zip 文件，使用 pip 安装 wheel 
+文件，拷贝文件到安装目录等等。rezbuild 用于简化所有相似的安装步骤，让我们在安装 rez 
+包的时候只需要关注安装逻辑即可。
 
 ## 教程
 
 ### 依赖项
 
-Rezbuild requires the python-3.6+, build-0.3+(lower version did not test) and
-pip-18+ to run. If you want to install this package from source, git and
-setuptools_scm are also needed.
+rezbuild 只能在 python-3.6 及以上版本运行，同时需要 build-0.3 及以上版本（0.3
+以下的版本未经过测试，不保证一定能运行），pip-18 及以上版本。如果需要从源代码安装 
+rezbuild，则构建时还 需要 git 和 setuptools_scm。
 
 ### 如何安装
 
-1.Install by rezbuild
+1.通过自己安装
 
-The recommended way to install this package is using itself. Make sure you have
-all the requirements are installed into rez environment, include rezbuild(early
-version of this package).
-Download wheel file from [PyPI](https://pypi.org/project/rezbuild/#files)
-And then create a directory like this:
+rezbuild 
+可以自己安装自己，这也是推荐的方式。请确保所有的依赖项都已安装到您的环境中，包括 
+rezbuild（旧版本即可）。
+请从  [PyPI](https://pypi.org/project/rezbuild/#files) 下载官方 wheel 
+文件，并创建如下目录：
 
 ```text
 install_rezbuild/
     |___rez_installers/
         |___0/
-            |___rezbuild-0.1.1-py3-none-any.whl
+            |___rezbuild-0.2.0-py3-none-any.whl
     |___build.py
     |___package.py
 ```
-The content of build.py can be like this:
+
+build.py 的内容如下：
 
 ```python
 # build.py
@@ -55,7 +55,8 @@ if __name__ == '__main__':
     builder.build()
 ```
 
-The content of package.py can be like this:
+package.py 的内容如下:
+
 ```python
 # package.py
 name = "rezbuild"
@@ -79,22 +80,19 @@ def commands():
     env.PYTHONPATH.append("{root}/site-packages")
 ```
 
-Then, run this command in the root directory
+进入根目录（install_rezbuild），并运行如下命令：
 `rez build -i`
 
-After that, this package will be installed as a rez package.
+当命令执行完成后，该包就已作为 rez 包安装完成了。
 
-2.Install by source for rez
+2.从源代码安装
 
-If you are new in rezbuild, or there's no early rezbuild version in you rez
-environment, you can use rez to install this package from source. Make sure all
-the requirement already installed into you rez environment(python-3.6+,
-build-0.3+, pip-18+, [git, setuptools_scm]). If you do not have setuptools_scm
-in you rez environment, please change the `version` argument to the version of
-rezbuild you download in `package.py` file . The default way to get the version
-number is using setuptools_scm to auto get it.
+如果你第一次使用 rezbuild，或你的系统中没有旧版本的 rezbuild，你也可以通过源代码来安装
+rezbuild。请确保所有依赖项均已安装(python-3.6+, build-0.3+, pip-18+,
+[git, setuptools_scm])。如果系统中没有 setuptools_scm，也可以手动将 `package.py` 中的
+`version` 字段改为对应版本。该字段的默认行为是自动通过 setuptools_scm 来获取正确的版本号。
 
-Then, clone this project, cd the source root and run the rez install command:
+然后 clone 这个项目，进入代码根目录并运行构建命令即可，范例命令如下：
 
 ```shell
 git clone git@gitlab.com:Pili-Pala/rezbuild.git
@@ -102,15 +100,15 @@ cd rezbuild
 rez build -i
 ```
 
-3.Install from pypi
+3.通过 PyPI 安装
 
-Of course, you can install this package from pip
+当然，你也可以通过 pip 来安装 rezbuild：
 
 ```shell
 pip install rezbuild
 ```
 
-But as this package is for rez, it doesn't make sense in most of the time.
+但考虑到此工具专用于 rez，绝大多数时候这么做是没什么意义的。 
 
 ## 测试
 
@@ -122,8 +120,8 @@ But as this package is for rez, it doesn't make sense in most of the time.
 
 ## 版本管理
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available,
-see the [tags on this repository](https://gitlab.com/Pili-Pala/rezbuild/tags).
+此项目使用 [语义化版本](http://semver.org/) 来规范版本命名。可以访问
+[此项目的所有 tag](https://gitlab.com/Pili-Pala/rezbuild/tags) 来查看所有可用版本.
 
 ## 作者
 [噼里啪啦](https://gitlab.com/Pili-Pala)

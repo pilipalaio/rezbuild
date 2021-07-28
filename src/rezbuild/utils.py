@@ -8,14 +8,14 @@ import shutil
 import stat
 
 
-def change_shabang(filepath, shabang, is_bin=False, origin_shabang=""):
-    """Change shabang of the exe file.
+def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
+    """Change shebang of the exe file.
 
     Args:
         filepath (str): The path of the file you want to change.
-        shabang (str): The shabang you want to change to. Do not include `#!`.
+        shebang (str): The shebang you want to change to. Do not include `#!`.
         is_bin (bool): If the file is a binary file.
-        origin_shabang (str): The original shabang to replaced. Do not include
+        origin_shebang (str): The original shebang to replaced. Do not include
             `#!`.
     """
     read_mode, write_mode = "r", "w"
@@ -24,18 +24,18 @@ def change_shabang(filepath, shabang, is_bin=False, origin_shabang=""):
         write_mode += "b"
 
     with open(filepath, read_mode) as file_:
-        if origin_shabang and is_bin:
-            origin_shabang = f"#!{origin_shabang}"
-            new_shabang = bytes(f"#!{shabang}", encoding="utf-8")
-            new_shabang = new_shabang.ljust(len(origin_shabang), b" ")
-            new_content = file_.read().replace(origin_shabang, new_shabang)
-        elif origin_shabang:
-            origin_shabang = f"#!{origin_shabang}"
-            new_content = file_.read().replace(origin_shabang, f"#!{shabang}")
+        if origin_shebang and is_bin:
+            origin_shebang = f"#!{origin_shebang}"
+            new_shebang = bytes(f"#!{shebang}", encoding="utf-8")
+            new_shebang = new_shebang.ljust(len(origin_shebang), b" ")
+            new_content = file_.read().replace(origin_shebang, new_shebang)
+        elif origin_shebang:
+            origin_shebang = f"#!{origin_shebang}"
+            new_content = file_.read().replace(origin_shebang, f"#!{shebang}")
         else:
             content = file_.read()
-            origin_shabang = re.match(r"#!.+", content).group(0)
-            new_content = content.replace(origin_shabang, f"#!{shabang}")
+            origin_shebang = re.match(r"#!.+", content).group(0)
+            new_content = content.replace(origin_shebang, f"#!{shebang}")
 
     with open(filepath, write_mode) as file_:
         file_.write(new_content)
