@@ -108,15 +108,98 @@ rez build -i
 pip install rezbuild
 ```
 
-但考虑到此工具专用于 rez，绝大多数时候这么做是没什么意义的。 
-
-## 测试
-
-### Break down into end to end tests
-
-### And coding style tests
+但考虑到此工具专用于 rez，绝大多数时候这么做是没什么意义的。
 
 ## 使用方式
+
+Rez 在 2.70.0 版本后移除了 bez 构建工具，本文档指包含该版本后的使用方式。
+
+Rezbuild 支持多种不同的构建途径，可以从 whl 文件构建 python 
+包，也可以从源代码开始构建，或者你也可以自定义构建方式。
+
+### 由 python wheel 文件构建 rez 包
+
+我假设你了解 rez 是什么，如何制作 package.py 文件，且你现在想制作一个第三方的 python 包。
+
+首先，添加一个名为 `build.py` 的 python 文件到构建根目录，内容如下：
+
+```python
+# Import third-party modules
+from rezbuild import PythonWheelBuilder
+
+
+if __name__ == '__main__':
+    PythonWheelBuilder().build()
+```
+
+然后，在 `package.py` 文件中增加一个 `build_command` 变量，例如：
+`build_command = 'python {root}/build.py {install}'`.
+
+从 [PyPI](https://pypi.org) 下载你需要安装的包的 wheel 文件，放到 
+`source_root/rez_installers/0` 目录下。目录结构如下：
+
+```text
+source_root/
+    |___rez_installers/
+        |___0/
+            |___the_package_you_want_to_install.whl
+    |___build.py
+    |___package.py
+```
+
+最后，将当前目录切换到 `source_root` 然后执行构建命令 `rez build -i`，该 rez 
+包即会自动安装完成。
+
+### 由 python 源代码构建包
+
+与构建 wheel 包的不同之处仅仅只是 builder 的名字。将 builder 改为 `PythonSourceBuilder`
+即可。如下：
+
+```python
+# Import third-party modules
+from rezbuild import PythonSourceBuilder
+
+
+if __name__ == '__main__':
+    PythonSourceBuilder().build()
+```
+
+在运行构建命令前请确保你已经添加了所有构建 python 包的必要文件
+[tutorial](https://packaging.python.org/tutorials/packaging-projects/).
+`PythonSourceBuilder` 会调用 python 官方默认的构建方式 build 来构建包。
+
+### 自定义 builder
+
+你也可以自定义 builder。只需要从默认 builder 继承并重写 `custom_build`
+函数即可。下边将简单介绍 rezbuild 的默认 builder 以方便你自定义自己的 builder。 
+
+#### RezBuilder
+`RezBuilder` 是根 builder，所有其他 builder 都继承自它。此 builder 负责捕获 rez
+环境变量，确认工作目录，将构建好的包安装到系统中，以及执行你的自定义构建函数。
+
+使用样例:
+```python
+# Import built-in modules
+import os
+import shutil
+
+# Import third-party modules
+from rezbuild import RezBuilder
+
+
+class CustomBuilder(RezBuilder):
+
+    def custom_build(self, copy=False):
+        if copy:
+            shutil.copytree(
+                os.path.join(self.source_path, "src"), self.build_path)
+
+
+if __name__ == '__main__':
+    CustomBuilder().build(copy=True)
+```
+
+`build` 函数会调用自定义构建函数 `custom_build` 来构建包。
 
 ## 版本管理
 

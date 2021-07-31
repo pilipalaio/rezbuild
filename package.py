@@ -16,7 +16,7 @@ private_build_requires = [
     "git",
 ]
 
-build_command = 'python {root}/build.py {install}'
+build_command = "python {root}/build.py {install}"
 
 
 def commands():

@@ -30,6 +30,7 @@ import tempfile
 # Import local modules
 from rezbuild.exceptions import ArgumentError
 from rezbuild.utils import change_shebang
+from rezbuild.utils import get_windows_shebang
 from rezbuild.utils import get_delimiter
 from rezbuild.utils import remove_tree
 
@@ -219,8 +220,11 @@ class PythonBuilder(RezBuilder, abc.ABC):
         for filename in os.listdir(root):
             filepath = os.path.join(root, filename)
             if platform.system() == "Windows":
-                # Will implemented in the future.
-                pass
+                origin_shebang = get_windows_shebang(
+                    filepath, "#!.+python.exe")
+                change_shebang(
+                    filepath, "#!python.exe", is_bin=True,
+                    origin_shebang=origin_shebang)
             else:
                 change_shebang(filepath, "/usr/bin/env python")
 
@@ -267,8 +271,11 @@ class PythonSourceBuilder(PythonBuilder):
 
     """
 
-    def create_wheel(self):
+    def create_wheel(self, is_venv=True):
         """Create wheel file from source code and put into a temp dir.
+
+        Args:
+            is_venv (bool): Whether to create venv when build python package.
 
         Returns:
             str: The wheel file path.
@@ -278,6 +285,8 @@ class PythonSourceBuilder(PythonBuilder):
             shutil.copytree(self.source_path, temp_src)
             wheel_dir = os.path.join(self.build_path, "wheel_dir")
             command = ["pyproject-build", "-o", wheel_dir]
+            if not is_venv:
+                command.append("--no-isolation")
             print(f"\nWheel create command: {' '.join(command)}")
             # Remove pip from environment to let venv install it.
             subprocess.run(
@@ -287,9 +296,15 @@ class PythonSourceBuilder(PythonBuilder):
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
 
-    def custom_build(self, is_change_shebang=False, **kwargs):
-        """Build package from source."""
-        wheel_filepath = self.create_wheel()
+    def custom_build(self, is_change_shebang=False, is_venv=True):
+        """Build package from source.
+
+        Args:
+            is_change_shebang (bool): Whether to change the shebang from the
+                bin files.
+            is_venv (bool): Whether to create venv when build python package.
+        """
+        wheel_filepath = self.create_wheel(is_venv=is_venv)
         self.install_wheel_file(wheel_filepath, self.workspace)
         self.to_site_packages()
         if is_change_shebang:
@@ -309,7 +324,7 @@ class PythonSourceBuilder(PythonBuilder):
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self, is_change_shebang=False, **kwargs):
+    def custom_build(self, is_change_shebang=False):
         """Build package from wheel file.
 
         Args:

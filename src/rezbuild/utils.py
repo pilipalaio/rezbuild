@@ -13,29 +13,32 @@ def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
 
     Args:
         filepath (str): The path of the file you want to change.
-        shebang (str): The shebang you want to change to. Do not include `#!`.
+        shebang (str): The shebang you want to change to.
         is_bin (bool): If the file is a binary file.
-        origin_shebang (str): The original shebang to replaced. Do not include
-            `#!`.
+        origin_shebang (str): The original shebang to replaced.
     """
     read_mode, write_mode = "r", "w"
     if is_bin:
         read_mode += "b"
         write_mode += "b"
+    if not shebang.startswith("#!"):
+        shebang = f"#!{shebang}"
+    if origin_shebang and not origin_shebang.startswith("#!"):
+        origin_shebang = f"#!{origin_shebang}"
 
     with open(filepath, read_mode) as file_:
-        if origin_shebang and is_bin:
-            origin_shebang = f"#!{origin_shebang}"
-            new_shebang = bytes(f"#!{shebang}", encoding="utf-8")
-            new_shebang = new_shebang.ljust(len(origin_shebang), b" ")
-            new_content = file_.read().replace(origin_shebang, new_shebang)
-        elif origin_shebang:
-            origin_shebang = f"#!{origin_shebang}"
-            new_content = file_.read().replace(origin_shebang, f"#!{shebang}")
-        else:
-            content = file_.read()
-            origin_shebang = re.match(r"#!.+", content).group(0)
-            new_content = content.replace(origin_shebang, f"#!{shebang}")
+        content = file_.read()
+
+    if origin_shebang and is_bin:
+        new_shebang = bytes(shebang, encoding="utf-8")
+        origin_shebang = bytes(origin_shebang, encoding="utf-8")
+        new_shebang = new_shebang.ljust(len(origin_shebang), b" ")
+        new_content = content.replace(origin_shebang, new_shebang)
+    elif origin_shebang:
+        new_content = content.replace(origin_shebang, shebang)
+    else:
+        origin_shebang = re.match("#!.+", content).group(0)
+        new_content = content.replace(origin_shebang, shebang)
 
     with open(filepath, write_mode) as file_:
         file_.write(new_content)
@@ -51,6 +54,26 @@ def get_delimiter():
         return ";"
     else:
         return ":"
+
+
+def get_windows_shebang(filepath, pattern):
+    """Get the windows shebang from binary files.
+
+    Args:
+        filepath (str): The filepath to get shebang from.
+        pattern (str): The re pattern to match shebang.
+
+    Returns:
+        str: The matched shebang.
+    """
+    if not pattern.startswith("#!"):
+        pattern = f"#!{pattern}"
+    with open(filepath, "rb") as file_:
+        content = file_.read()
+    match = re.search(bytes(pattern, encoding="utf-8"), content)
+    if match:
+        return str(match.group(0), encoding="utf-8")
+    return ""
 
 
 def remove_tree(path):

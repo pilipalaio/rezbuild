@@ -112,16 +112,6 @@ pip install rezbuild
 As this package is for rez, install from pypi doesn't make sense in most of the
 time.
 
-## Running the tests
-
-### Break down into end-to-end tests
-
-WIP
-
-### Coding style tests
-
-WIP
-
 ## Usage
 
 After 2.70.0, rez removed the bez build system. So the docs is based on 
@@ -133,7 +123,7 @@ source, or you can customize you build function.
 ### Build from python wheel file
 
 I assume that you already know what is rez, how to make a package.py, and now
-you want to build a python package come from the internet.
+you want to build a third-party python package come from the internet.
 
 Fist, add a build file into you package root, just like a file named
 `build.py`. The content can be like this:
@@ -147,7 +137,7 @@ if __name__ == '__main__':
     PythonWheelBuilder().build()
 ```
 
-Then add the attribute build_command into the `package.py` file,
+Then add variable `build_command` into the `package.py` file,
 content should be like this: 
 `build_command = 'python {root}/build.py {install}'`.
 
@@ -163,7 +153,8 @@ source_root/
     |___package.py
 ```
 
-Finally, run the command `rez build -i`, the package will be installed.
+Finally, change directory to source_root and run the command `rez build -i`,
+the package will be installed.
 
 ### Build from python source code
 
@@ -182,17 +173,22 @@ if __name__ == '__main__':
 Then ensure you already make all the necessary files to build a python package.
 Check with this 
 [tutorial](https://packaging.python.org/tutorials/packaging-projects/).
+`PythonSourceBuilder` will use the official default way(build) to build the
+package.
 
 Then run the command `rez build -i`, the package will be build and installed.
 
 ### Custom builder
 
-You can customize a builder for you code from base builder. 
+You can customize a builder for you code from base builder. Just make a builder
+inherit from RezBuilder and rewrite `custom_build` function. Follow will
+introduce all the default builder from rezbuild so that you can use them to
+customize you own builder.
 
 #### RezBuilder
 `RezBuilder` is the root builder, all the builder inherit from it. It gets the
-rez environment, make sure the workspace, install package, and customize you
-own build function.
+rez environment, make sure the workspace, install package, and execute you
+custom build function.
 
 For example:
 ```python
