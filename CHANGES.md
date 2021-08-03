@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.5.0 (August 3rd, 2021)
+--------------------------------
+Changed:
+  - Make installer variant folder unnecessary.
+
 Version 0.4.0 (July 31st, 2021)
 -------------------------------
 Add:

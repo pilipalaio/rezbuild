@@ -37,11 +37,11 @@ And then create a directory like this:
 ```text
 install_rezbuild/
     |___rez_installers/
-        |___0/
-            |___rezbuild-0.1.1-py3-none-any.whl
+        |___rezbuild-0.4.0-py3-none-any.whl
     |___build.py
     |___package.py
 ```
+
 The content of build.py can be like this:
 
 ```python
@@ -55,6 +55,7 @@ if __name__ == '__main__':
 ```
 
 The content of package.py can be like this:
+
 ```python
 # package.py
 name = "rezbuild"
@@ -78,9 +79,7 @@ def commands():
     env.PYTHONPATH.append("{root}/site-packages")
 ```
 
-Then, run this command in the root directory
-`rez build -i`
-
+Then, run this command in the root directory `rez build -i`.
 After that, this package will be installed as a rez package.
 
 2.Install by source for rez
@@ -125,7 +124,7 @@ source, or you can customize you build function.
 I assume that you already know what is rez, how to make a package.py, and now
 you want to build a third-party python package come from the internet.
 
-Fist, add a build file into you package root, just like a file named
+First, add a build file into you package root, just like a file named
 `build.py`. The content can be like this:
 
 ```python
@@ -212,6 +211,23 @@ if __name__ == '__main__':
 
 build function will invoke the custom_build function to build the package.
 
+### Multiple variant
+If you need to install a multi-variant package with different installers for
+each variant, you need to put the installers into the folders that named with
+the variant index under the `installers` folder. For example:
+
+```text
+git/
+    |___installers/
+        |___0
+            |___PortableGit-2.32.0.2-64-bit.7z.exe
+        |___1
+            |___git-2.32.0.tar.xz
+    |___build.py
+    |___package.py
+```
+
+Rezbuild will get all the installers under the variant folder when building it.
 
 ## Versioning
 

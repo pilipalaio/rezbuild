@@ -36,9 +36,8 @@ rezbuild（旧版本即可）。
 
 ```text
 install_rezbuild/
-    |___rez_installers/
-        |___0/
-            |___rezbuild-0.2.0-py3-none-any.whl
+    |___installers/
+        |___rezbuild-0.4.0-py3-none-any.whl
     |___build.py
     |___package.py
 ```
@@ -80,9 +79,7 @@ def commands():
     env.PYTHONPATH.append("{root}/site-packages")
 ```
 
-进入根目录（install_rezbuild），并运行如下命令：
-`rez build -i`
-
+进入根目录（install_rezbuild），并运行如下命令：`rez build -i`
 当命令执行完成后，该包就已作为 rez 包安装完成了。
 
 2.从源代码安装
@@ -136,13 +133,12 @@ if __name__ == '__main__':
 `build_command = 'python {root}/build.py {install}'`.
 
 从 [PyPI](https://pypi.org) 下载你需要安装的包的 wheel 文件，放到 
-`source_root/rez_installers/0` 目录下。目录结构如下：
+`source_root/installer` 目录下。目录结构如下：
 
 ```text
 source_root/
-    |___rez_installers/
-        |___0/
-            |___the_package_you_want_to_install.whl
+    |___installers/
+        |___the_package_you_want_to_install.whl
     |___build.py
     |___package.py
 ```
@@ -200,6 +196,24 @@ if __name__ == '__main__':
 ```
 
 `build` 函数会调用自定义构建函数 `custom_build` 来构建包。
+
+### 多变种包的安装
+如果您安装的软件涉及多个变种(variants)，且每个变种的安装包都是独立的，则您的可以在
+`installers` 文件夹下创建以变种索引(variant
+index)命名的文件夹，并在文件夹下放置对应安装包。例如：
+
+```text
+git/
+    |___installers/
+        |___0
+            |___PortableGit-2.32.0.2-64-bit.7z.exe
+        |___1
+            |___git-2.32.0.tar.xz
+    |___build.py
+    |___package.py
+```
+
+当构建到该变种时，rezbuild 即会自动抓取到目录下的所有安装包。
 
 ## 版本管理
 

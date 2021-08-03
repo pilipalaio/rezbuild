@@ -162,8 +162,11 @@ class InstallBuilder(RezBuilder, abc.ABC):
                     return path
             else:
                 path = os.path.join(
-                    self.source_path, "rez_installers", self.variant_index)
-            return [os.path.join(path, file_) for file_ in os.listdir(path)]
+                    self.source_path, "installers", self.variant_index)
+                if not os.path.isdir(path):
+                    path = os.path.join(self.source_path, "installers")
+            return [os.path.join(path, file_) for file_ in os.listdir(path)
+                    if os.path.isfile(os.path.join(path, file_))]
         elif self._search_mode == self.__class__.PYPI:
             raise NotImplementedError(
                 "PYPI mode does not implemented in this version.")
