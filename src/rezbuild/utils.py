@@ -7,14 +7,17 @@ import re
 import shutil
 import stat
 
+# Import local modules
+from rezbuild.exceptions import ArgumentError
+
 
 def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
     """Change shebang of the exe file.
 
     Args:
         filepath (str): The path of the file you want to change.
-        shebang (str): The shebang you want to change to.
-        is_bin (bool): If the file is a binary file.
+        shebang (str): The shebang to change to.
+        is_bin (bool): Whether the file is a binary file.
         origin_shebang (str): The original shebang to replaced.
     """
     read_mode, write_mode = "r", "w"
@@ -42,6 +45,12 @@ def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
 
     with open(filepath, write_mode) as file_:
         file_.write(new_content)
+
+
+def clear_path(path):
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
 
 
 def get_delimiter():
@@ -74,6 +83,28 @@ def get_windows_shebang(filepath, pattern):
     if match:
         return str(match.group(0), encoding="utf-8")
     return ""
+
+
+def make_bins_movable(bin_path, shebang, pattern=None):
+    """Change all the shebang of entry points to make it movable.
+
+     Args:
+         bin_path (str): Where the entry files placed.
+         shebang (str): The shebang to change to.
+         pattern (str): The re pattern to match shebang.
+     """
+    for filename in os.listdir(bin_path):
+        filepath = os.path.join(bin_path, filename)
+        if platform.system() == "Windows":
+            if not pattern:
+                raise ArgumentError(
+                    "Argument `pattern` can not be None on Windows.")
+            origin_shebang = get_windows_shebang(filepath, pattern)
+            change_shebang(
+                filepath, shebang, is_bin=True,
+                origin_shebang=origin_shebang)
+        else:
+            change_shebang(filepath, shebang)
 
 
 def remove_tree(path):

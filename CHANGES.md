@@ -7,14 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.5.0 (August 3rd, 2021)
+Version 0.5.0 (August 12th, 2021)
 --------------------------------
+Added:
+  - `ExtractBuilder`.
+  - `CompileBuilder`.
+  - `utils.make_bins_movable` function.
+
 Changed:
-  - Make installer variant folder unnecessary.
+  - Support get installers from `installers` folder.
+  - Add `regex` parameter in `InstallBuilder.get_installers`.
+  - Changed python requires to 3.8+.
+  - Rename `PythonBuilder.change_shebangs` to `PythonBuilder.change_shebang`.
 
 Version 0.4.0 (July 31st, 2021)
 -------------------------------
-Add:
+Added:
   - `utils.get_windows_shebang` function.
 
 Changed:
@@ -23,7 +31,7 @@ Changed:
 
 Version 0.3.0 (July 29th, 2021)
 -------------------------------
-Add:
+Added:
   - Add is_change_shabang options into
     `rezbuild.PythonSourceBuilder.custom_build`.
     
@@ -32,7 +40,7 @@ Changed:
 
 Version 0.2.0 (July 27th, 2021)
 -------------------------------
-Add:
+Added:
   - Add change_shabang function in `rezbuild.utils`.
   - Add is_change_shabang options into
     `rezbuild.PythonWheelBuilder.custom_build`.

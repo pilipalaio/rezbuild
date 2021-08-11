@@ -23,15 +23,17 @@ Rez builder help to build rez packages.
 import abc
 import os
 import platform
+import re
 import shutil
 import subprocess
+import tarfile
 import tempfile
 
 # Import local modules
 from rezbuild.exceptions import ArgumentError
-from rezbuild.utils import change_shebang
-from rezbuild.utils import get_windows_shebang
+from rezbuild.utils import clear_path
 from rezbuild.utils import get_delimiter
+from rezbuild.utils import make_bins_movable
 from rezbuild.utils import remove_tree
 
 
@@ -126,16 +128,27 @@ class InstallBuilder(RezBuilder, abc.ABC):
         else:
             raise ArgumentError(f"Mode {self._search_mode} unsupported.")
 
-    def get_installers(self, local_path=None):
+    def get_installers(self, local_path=None, regex=None):
         """Get installers.
 
         In `InstallerBuilder.LOCAL` mode, the default place is a folder named
-        "rez_installers" under the source root. Each variants has a folder
-        named with its "REZ_BUILD_VARIANT_INDEX" under the installers
-        directory. The directory structure should looks like this:
+        "installers" under the source root. You can put the installers into the
+        installers folder, or if the different variant has different installer,
+        put its into variant folders. Each variants has a folder named with its
+        "REZ_BUILD_VARIANT_INDEX" under the installers directory. The directory
+        structure should like this:
 
         source_root/
-            |___rez_installers/
+            |___installers/
+                |___installer1
+                |___installer2
+                |___installer3
+                |___installer4
+
+        Or like this:
+
+        source_root/
+            |___installers/
                 |___0/
                     |___installer1
                     |___installer2
@@ -148,6 +161,7 @@ class InstallBuilder(RezBuilder, abc.ABC):
             local_path (str): The directory where the installers placed.
                 This will be used when the installer_search_mode is
                 `InstallerBuilder.LOCAL`.
+            regex (str): The regex string to match the installer name.
 
         Returns:
             :obj:`list` of :obj:`str`: All the paths of the installers.
@@ -155,18 +169,21 @@ class InstallBuilder(RezBuilder, abc.ABC):
         Raises:
             ArgumentError: When the installer search mode does not support.
         """
+        regex = regex or r".*"
         if self._search_mode == self.__class__.LOCAL:
             if local_path:
                 path = os.path.join(local_path, self.variant_index)
-                if os.path.isfile(path):
-                    return path
             else:
                 path = os.path.join(
                     self.source_path, "installers", self.variant_index)
-                if not os.path.isdir(path):
-                    path = os.path.join(self.source_path, "installers")
-            return [os.path.join(path, file_) for file_ in os.listdir(path)
-                    if os.path.isfile(os.path.join(path, file_))]
+            if not os.path.isdir(path):
+                path = os.path.join(self.source_path, "installers")
+            files = []
+            for filename in os.listdir(path):
+                filepath = os.path.join(path, filename)
+                if os.path.isfile(filepath) and re.match(regex, filename):
+                    files.append(filepath)
+            return files
         elif self._search_mode == self.__class__.PYPI:
             raise NotImplementedError(
                 "PYPI mode does not implemented in this version.")
@@ -209,10 +226,56 @@ class InstallBuilder(RezBuilder, abc.ABC):
             raise ArgumentError(f"Mode {self._search_mode} unsupported.")
 
 
+class ExtractBuilder(InstallBuilder):
+
+    def extract(self, extract_path, installer_regex=None):
+        clear_path(extract_path)
+        for installer in self.get_installers(regex=installer_regex):
+            if installer.split(".")[-1] in ["gz", "xz"]:
+                with tarfile.open(installer, "r") as tar:
+                    tar.extractall(extract_path)
+            elif installer.endswith("7z.exe"):
+                subprocess.run(installer, check=True, cwd=extract_path)
+
+    def custom_build(self, extract_path=None, installer_regex=None):
+        extract_path = extract_path or os.path.join(self.build_path, "extract")
+        self.extract(extract_path, installer_regex=installer_regex)
+        for extract in os.listdir(extract_path):
+            shutil.copytree(
+                os.path.join(extract_path, extract), self.workspace,
+                dirs_exist_ok=True)
+
+
+class CompileBuilder(ExtractBuilder):
+
+    @staticmethod
+    def compile(source_path, install_path, extra_config_args=None):
+        extra_config_args = extra_config_args or []
+        commands = [
+            ["./configure", f"--prefix={install_path}"] + extra_config_args,
+            ["make"],
+            ["make", "install"],
+        ]
+        for cmds in commands:
+            subprocess.run(cmds, check=True, cwd=source_path)
+
+    def custom_build(
+            self, extra_config_args=None, installer_regex=None,
+            install_path=None):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            extract_path = os.path.join(temp_dir, "extract")
+            install_path = install_path or self.workspace
+            self.extract(extract_path, installer_regex=installer_regex)
+            for extract in os.listdir(extract_path):
+                self.compile(
+                    os.path.join(extract_path, extract), install_path,
+                    extra_config_args=extra_config_args)
+
+
 class PythonBuilder(RezBuilder, abc.ABC):
     """This class include some common method for build python package."""
 
-    def change_shebangs(self, root=None):
+    def change_shebang(self, root=None):
         """Change all the shebang of entry files where in bin directory.
 
         Args:
@@ -220,16 +283,10 @@ class PythonBuilder(RezBuilder, abc.ABC):
                 directory.
         """
         root = root or os.path.join(self.workspace, "bin")
-        for filename in os.listdir(root):
-            filepath = os.path.join(root, filename)
-            if platform.system() == "Windows":
-                origin_shebang = get_windows_shebang(
-                    filepath, "#!.+python.exe")
-                change_shebang(
-                    filepath, "#!python.exe", is_bin=True,
-                    origin_shebang=origin_shebang)
-            else:
-                change_shebang(filepath, "/usr/bin/env python")
+        if platform.system() == "Windows":
+            make_bins_movable(root, "#!python.exe", "#!.+python.exe")
+        else:
+            make_bins_movable(root, "/usr/bin/env python")
 
     @staticmethod
     def install_wheel_file(wheel_file, install_path):
@@ -311,7 +368,7 @@ class PythonSourceBuilder(PythonBuilder):
         self.install_wheel_file(wheel_filepath, self.workspace)
         self.to_site_packages()
         if is_change_shebang:
-            self.change_shebangs()
+            self.change_shebang()
 
     @staticmethod
     def get_no_pip_environment():
@@ -340,4 +397,4 @@ class PythonWheelBuilder(PythonBuilder, InstallBuilder):
         self.install_wheel_file(wheels[0], self.workspace)
         self.to_site_packages()
         if is_change_shebang:
-            self.change_shebangs()
+            self.change_shebang()
