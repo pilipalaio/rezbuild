@@ -44,8 +44,8 @@ class RezBuilder(abc.ABC):
         """Initialize builder."""
         self.build_path = os.environ["REZ_BUILD_PATH"]
         self.install_path = os.environ["REZ_BUILD_INSTALL_PATH"]
-        self.project_name = os.environ["REZ_BUILD_PROJECT_NAME"]
-        self.project_version = os.environ["REZ_BUILD_PROJECT_VERSION"]
+        self.name = os.environ["REZ_BUILD_PROJECT_NAME"]
+        self.version = os.environ["REZ_BUILD_PROJECT_VERSION"]
         self.source_path = os.environ["REZ_BUILD_SOURCE_PATH"]
         self.variant_index = os.environ["REZ_BUILD_VARIANT_INDEX"]
         self.workspace = os.path.join(self.build_path, "workspace")
@@ -102,6 +102,13 @@ class InstallBuilder(RezBuilder, abc.ABC):
     PYPI = 1
 
     def __init__(self, mode=None, **kwargs):
+        """Initialize the builder.
+
+        Args:
+            mode (int): The installer search mode to set.
+                InstallerBuilder.LOCAL -- 0
+                InstallerBuilder.PYPI -- 1
+        """
         self._search_mode = None
         self._init_search_mode(mode)
         super().__init__(**kwargs)
@@ -227,17 +234,35 @@ class InstallBuilder(RezBuilder, abc.ABC):
 
 
 class ExtractBuilder(InstallBuilder):
+    """Build package from the archive file."""
 
     def extract(self, extract_path, installer_regex=None):
+        """Extract the installers.
+
+        Args:
+            extract_path (str): The path to extract to.
+            installer_regex (str): The regex to match the installer name. Only
+                the matched installer will be extracted and compiled.
+        """
         clear_path(extract_path)
         for installer in self.get_installers(regex=installer_regex):
             if installer.split(".")[-1] in ["gz", "xz"]:
                 with tarfile.open(installer, "r") as tar:
                     tar.extractall(extract_path)
             elif installer.endswith("7z.exe"):
-                subprocess.run(installer, check=True, cwd=extract_path)
+                name = os.path.basename(installer).split(".")[0]
+                extract_path = os.path.join(extract_path, name)
+                cmds = [installer, "-y", f"-o{extract_path}"]
+                subprocess.run(cmds, check=True)
 
     def custom_build(self, extract_path=None, installer_regex=None):
+        """Run the extract build.
+
+        Args:
+            extract_path (str): The path to extract to.
+            installer_regex (str): The regex to match the installer name. Only
+                the matched installer will be extracted and compiled.
+        """
         extract_path = extract_path or os.path.join(self.build_path, "extract")
         self.extract(extract_path, installer_regex=installer_regex)
         for extract in os.listdir(extract_path):
@@ -247,9 +272,18 @@ class ExtractBuilder(InstallBuilder):
 
 
 class CompileBuilder(ExtractBuilder):
+    """Build package from source by compiler."""
 
     @staticmethod
     def compile(source_path, install_path, extra_config_args=None):
+        """Compile the package.
+
+        Args:
+            source_path (str): The source root of this package to compile.
+            install_path (str): The install path to install to.
+            extra_config_args (:obj:`list` of :obj:`str`): Extra config
+                arguments to pass to the configure.
+        """
         extra_config_args = extra_config_args or []
         commands = [
             ["./configure", f"--prefix={install_path}"] + extra_config_args,
@@ -262,6 +296,17 @@ class CompileBuilder(ExtractBuilder):
     def custom_build(
             self, extra_config_args=None, installer_regex=None,
             install_path=None):
+        """Run the compile build.
+
+        Args:
+            extra_config_args (:obj:`list` of :obj:`str`): Extra config
+                arguments to pass to the configure.
+            installer_regex (str): The regex to match the installer name. Only
+                the matched installer will be extracted and compiled.
+            install_path (str): The path to install the package. Note this is
+                different with the `self.install_path`. The path will pass to
+                the configure as the value of the prefix.
+        """
         with tempfile.TemporaryDirectory() as temp_dir:
             extract_path = os.path.join(temp_dir, "extract")
             install_path = install_path or self.workspace
@@ -372,6 +417,7 @@ class PythonSourceBuilder(PythonBuilder):
 
     @staticmethod
     def get_no_pip_environment():
+        """Remove pip path from the PYTHONPATH environment variables."""
         env = dict(os.environ)
         delimiter = get_delimiter()
         env["PYTHONPATH"] = delimiter.join([

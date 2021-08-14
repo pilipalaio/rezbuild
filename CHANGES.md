@@ -19,6 +19,8 @@ Changed:
   - Add `regex` parameter in `InstallBuilder.get_installers`.
   - Changed python requires to 3.8+.
   - Rename `PythonBuilder.change_shebangs` to `PythonBuilder.change_shebang`.
+  - Rename `RezBuilder.project_name` to `RezBuilder.name`.
+  - Rename `RezBuilder.project_version` to `RezBuilder.version`.
 
 Version 0.4.0 (July 31st, 2021)
 -------------------------------
