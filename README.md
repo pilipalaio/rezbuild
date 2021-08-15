@@ -26,18 +26,18 @@ setuptools_scm are also needed.
 
 ### Installing
 
-1.Install by rezbuild
+1.Install by itself(Need rezbuild in you rez repository)
 
 The recommended way to install this package is using itself. Make sure you have
-all the requirements are installed into rez environment, include rezbuild(early
-version of this package).
+all the requirements are installed into rez environment, include rezbuild
+(another version of this package).
 Download wheel file from [PyPI](https://pypi.org/project/rezbuild/#files)
 And then create a directory like this:
 
 ```text
 install_rezbuild/
-    |___rez_installers/
-        |___rezbuild-0.4.0-py3-none-any.whl
+    |___installers/
+        |___rezbuild-0.5.0-py3-none-any.whl
     |___build.py
     |___package.py
 ```
@@ -84,13 +84,13 @@ After that, this package will be installed as a rez package.
 
 2.Install by source for rez
 
-If you are new in rezbuild, or there's no early rezbuild version in you rez
+If you are new in rezbuild, or there's no other version of rezbuild in you rez
 environment, you can use rez to install this package from source. Make sure all
 the requirement already installed into you rez environment(python-3.6+,
 build-0.3+, pip-18+, [git, setuptools_scm]). If you do not have setuptools_scm
-in you rez environment, please change the `version` argument to the version of
-rezbuild you download in `package.py` file . The default way to get the version
-number is using setuptools_scm to auto get it.
+in you rez environment, please modify the `version` argument to the version of
+rezbuild you download in `package.py` file . By the way, the default way to get
+the version number is using setuptools_scm to auto get it.
 
 Then, clone this project, cd the source root and run the rez install command:
 
@@ -119,7 +119,7 @@ rez-2.70.0.
 Rezbuild support different build types, like build from whl file, build from
 source, or you can customize you build function.
 
-### Build from python wheel file
+### Build from python wheel file(PythonWheelBuilder)
 
 I assume that you already know what is rez, how to make a package.py, and now
 you want to build a third-party python package come from the internet.
@@ -141,13 +141,12 @@ content should be like this:
 `build_command = 'python {root}/build.py {install}'`.
 
 After that, go to [PyPI](https://pypi.org) to download the wheel file and put
-the file into `source_root/rez_installers/0`. The tree should like this:
+the file into `source_root/installers`. The tree should like this:
 
 ```text
 source_root/
-    |___rez_installers/
-        |___0/
-            |___the_package_you_want_to_install.whl
+    |___installers/
+        |___the_package_you_want_to_install.whl
     |___build.py
     |___package.py
 ```
@@ -155,7 +154,7 @@ source_root/
 Finally, change directory to source_root and run the command `rez build -i`,
 the package will be installed.
 
-### Build from python source code
+### Build from python source code(PythonSourceBuilder)
 
 The only different between build from wheel file is the builder. Change the
 content of `build.py` like this:
@@ -176,6 +175,56 @@ Check with this
 package.
 
 Then run the command `rez build -i`, the package will be build and installed.
+
+### Build from archive file(ExtractBuilder)
+
+Make `build.py` like this:
+
+```python
+# Import third-party modules
+from rezbuild import ExtractBuilder
+
+
+if __name__ == '__main__':
+    ExtractBuilder().build()
+```
+
+Put archive file into `installers` folder.
+
+```text
+source_root/
+    |___installers/
+        |___archive.zip
+    |___build.py
+    |___package.py
+```
+
+Then run command `rez build -i` from `source_root`.
+
+### Build from source by compile(CompileBuilder)
+
+Make `build.py` like this:
+
+```python
+# Import third-party modules
+from rezbuild import CompileBuilder
+
+
+if __name__ == '__main__':
+    CompileBuilder().build()
+```
+
+Put source archive file into installers folder.
+
+```text
+source_root/
+    |___installers/
+        |___git-2.32.0.tar.gz
+    |___build.py
+    |___package.py
+```
+
+Run command `rez build -i` from `source_root`.
 
 ### Custom builder
 
@@ -213,8 +262,8 @@ build function will invoke the custom_build function to build the package.
 
 ### Multiple variant
 If you need to install a multi-variant package with different installers for
-each variant, you need to put the installers into the folders that named with
-the variant index under the `installers` folder. For example:
+each variant, you can put the installers into the folders that named with the
+variant index under the `installers` folder. For example:
 
 ```text
 git/

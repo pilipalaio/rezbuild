@@ -1,6 +1,6 @@
 # Rezbuild
 
-Rezbuild 是一个 Rez 的包构建工具. 若想了解 Rez 请访问
+Rezbuild 是一个 Rez 的包构建工具。 若想了解 Rez 请访问
 [Rez 官方网站](https://github.com/nerdvegas/rez) 。
 
 Please visit
@@ -26,7 +26,7 @@ rezbuild，则构建时还 需要 git 和 setuptools_scm。
 
 ### 如何安装
 
-1.通过自己安装
+1.通过自己安装(需要环境中有其他版本的 rezbuild)
 
 rezbuild 
 可以自己安装自己，这也是推荐的方式。请确保所有的依赖项都已安装到您的环境中，包括 
@@ -37,7 +37,7 @@ rezbuild（旧版本即可）。
 ```text
 install_rezbuild/
     |___installers/
-        |___rezbuild-0.4.0-py3-none-any.whl
+        |___rezbuild-0.5.0-py3-none-any.whl
     |___build.py
     |___package.py
 ```
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     builder.build()
 ```
 
-package.py 的内容如下:
+package.py 的内容如下：
 
 ```python
 # package.py
@@ -84,9 +84,9 @@ def commands():
 
 2.从源代码安装
 
-如果你第一次使用 rezbuild，或你的系统中没有旧版本的 rezbuild，你也可以通过源代码来安装
-rezbuild。请确保所有依赖项均已安装(python-3.6+, build-0.3+, pip-18+,
-[git, setuptools_scm])。如果系统中没有 setuptools_scm，也可以手动将 `package.py` 中的
+如果你第一次使用 rezbuild，或你的系统中没有其他版本的 rezbuild，你也可以通过源代码来安装
+rezbuild。请确保所有依赖项均已安装(python-3.6+，build-0.3+，pip-18+，
+[git，setuptools_scm])。如果系统中没有 setuptools_scm，也可以手动将 `package.py` 中的
 `version` 字段改为对应版本。该字段的默认行为是自动通过 setuptools_scm 来获取正确的版本号。
 
 然后 clone 这个项目，进入代码根目录并运行构建命令即可，范例命令如下：
@@ -114,7 +114,7 @@ Rez 在 2.70.0 版本后移除了 bez 构建工具，本文档指包含该版本
 Rezbuild 支持多种不同的构建途径，可以从 whl 文件构建 python 
 包，也可以从源代码开始构建，或者你也可以自定义构建方式。
 
-### 由 python wheel 文件构建 rez 包
+### 由 python wheel 文件构建 rez 包(PythonWheelBuilder)
 
 我假设你了解 rez 是什么，如何制作 package.py 文件，且你现在想制作一个第三方的 python 包。
 
@@ -146,7 +146,7 @@ source_root/
 最后，将当前目录切换到 `source_root` 然后执行构建命令 `rez build -i`，该 rez 
 包即会自动安装完成。
 
-### 由 python 源代码构建包
+### 由 python 源代码构建包(PythonSourceBuilder)
 
 与构建 wheel 包的不同之处仅仅只是 builder 的名字。将 builder 改为 `PythonSourceBuilder`
 即可。如下：
@@ -161,8 +161,58 @@ if __name__ == '__main__':
 ```
 
 在运行构建命令前请确保你已经添加了所有构建 python 包的必要文件
-[tutorial](https://packaging.python.org/tutorials/packaging-projects/).
+[tutorial](https://packaging.python.org/tutorials/packaging-projects/)。
 `PythonSourceBuilder` 会调用 python 官方默认的构建方式 build 来构建包。
+
+### 由归档文件构建(ExtractBuilder)
+
+`build.py` 文件如下：
+
+```python
+# Import third-party modules
+from rezbuild import ExtractBuilder
+
+
+if __name__ == '__main__':
+    ExtractBuilder().build()
+```
+
+将归档文件放置于 `installers` 文件夹。
+
+```text
+source_root/
+    |___installers/
+        |___archive.zip
+    |___build.py
+    |___package.py
+```
+
+在 `source_root` 下执行命令 `rez build -i`。
+
+### 由源代码编译构建(CompileBuilder)
+
+`build.py` 如下：
+
+```python
+# Import third-party modules
+from rezbuild import CompileBuilder
+
+
+if __name__ == '__main__':
+    CompileBuilder().build()
+```
+
+Put source archive file into installers folder.
+
+```text
+source_root/
+    |___installers/
+        |___git-2.32.0.tar.gz
+    |___build.py
+    |___package.py
+```
+
+Run command `rez build -i` from `source_root`.
 
 ### 自定义 builder
 
@@ -173,7 +223,7 @@ if __name__ == '__main__':
 `RezBuilder` 是根 builder，所有其他 builder 都继承自它。此 builder 负责捕获 rez
 环境变量，确认工作目录，将构建好的包安装到系统中，以及执行你的自定义构建函数。
 
-使用样例:
+使用样例：
 ```python
 # Import built-in modules
 import os
@@ -218,7 +268,7 @@ git/
 ## 版本管理
 
 此项目使用 [语义化版本](http://semver.org/) 来规范版本命名。可以访问
-[此项目的所有 tag](https://gitlab.com/Pili-Pala/rezbuild/tags) 来查看所有可用版本.
+[此项目的所有 tag](https://gitlab.com/Pili-Pala/rezbuild/tags) 来查看所有可用版本。
 
 ## 作者
 [噼里啪啦](https://gitlab.com/Pili-Pala)
