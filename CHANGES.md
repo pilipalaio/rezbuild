@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.5.1 (August 18th, 2021)
+---------------------------------
+Fixed:
+  - Remove other path when create no pip environment.(#1)
+
 Version 0.5.0 (August 12th, 2021)
 --------------------------------
 Added:

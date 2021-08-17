@@ -392,11 +392,12 @@ class PythonSourceBuilder(PythonBuilder):
             command = ["pyproject-build", "-o", wheel_dir]
             if not is_venv:
                 command.append("--no-isolation")
+                env = dict(os.environ)
+            else:
+                env = self.get_no_pip_environment()
             print(f"\nWheel create command: {' '.join(command)}")
             # Remove pip from environment to let venv install it.
-            subprocess.run(
-                command, check=True, cwd=temp_src,
-                env=self.get_no_pip_environment())
+            subprocess.run(command, check=True, cwd=temp_src, env=env)
         wheel_file_name = [
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
@@ -422,7 +423,7 @@ class PythonSourceBuilder(PythonBuilder):
         delimiter = get_delimiter()
         env["PYTHONPATH"] = delimiter.join([
             path for path in env["PYTHONPATH"].split(delimiter)
-            if "pip" not in path
+            if not path.startswith(os.environ[f"REZ_PIP_ROOT"])
         ])
         return env
 
