@@ -14,6 +14,11 @@ Added:
   - `utils.get_lcload_dylibs` function.
   - `utils.is_macho` function.
 
+Version 0.5.1 (August 18th, 2021)
+---------------------------------
+Fixed:
+  - Remove other path when create no pip environment.(#1)
+
 Version 0.5.0 (August 12th, 2021)
 --------------------------------
 Added:
