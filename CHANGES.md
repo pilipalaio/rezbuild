@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.6.0 (August 17th, 2021)
+---------------------------------
+Added:
+  - Core dependencies.
+  - `utils.get_lcload_dylibs` function.
+  - `utils.is_macho` function.
+
 Version 0.5.0 (August 12th, 2021)
 --------------------------------
 Added:

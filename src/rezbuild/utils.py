@@ -6,8 +6,10 @@ import platform
 import re
 import shutil
 import stat
+import struct
 
 # Import local modules
+from rezbuild.constants import MACHO_MAGIC_NUMBERS
 from rezbuild.exceptions import ArgumentError
 
 
@@ -65,6 +67,40 @@ def get_delimiter():
         return ":"
 
 
+def get_lcload_dylibs(macho, ignore_system_dylib=True):
+    """Get lcload dylibs from Mach-O file.
+
+    Args:
+        macho (str): The Mach-O filepath to get from.
+        ignore_system_dylib (bool): Whether to ignore the system dylibs. System
+            dylibs means the dylib file under `/usr/lib` or under
+            `/System/Library`.
+
+    Returns:
+        :obj:`list` of :obj:`str`: The lcload dylibs.
+    """
+    dylibs = []
+    with open(macho, "rb") as file_:
+        file_.read(16)
+        load_cmd_count = struct.unpack("I", file_.read(4))[0]
+        file_.read(12)
+        for _ in range(load_cmd_count):
+            cmd, size = struct.unpack("2I", file_.read(8))
+            if cmd != 12:
+                file_.read(size - 8)
+                continue
+            file_.read(16)
+            remain_size = size - 8 - 16
+            path = b"".join(struct.unpack(f"{remain_size}c", file_.read(remain_size)))
+            path = path.decode("utf-8").strip(b"\x00".decode())
+            if not ignore_system_dylib:
+                dylibs.append(path)
+            elif (not path.startswith("/usr/lib/") and
+                  not path.startswith("/System/Library/")):
+                dylibs.append(path)
+    return dylibs
+
+
 def get_windows_shebang(filepath, pattern):
     """Get the windows shebang from binary files.
 
@@ -83,6 +119,20 @@ def get_windows_shebang(filepath, pattern):
     if match:
         return str(match.group(0), encoding="utf-8")
     return ""
+
+
+def is_macho(filepath):
+    """Check if the file is a Mach-O file.
+
+    Args:
+        filepath (str): The path of the file to check.
+
+    Returns:
+        bool: True if the file is a Mach-O file, false otherwise.
+    """
+    with open(filepath, "rb") as f:
+        magic_number = f.read(4)
+    return magic_number in MACHO_MAGIC_NUMBERS
 
 
 def make_bins_movable(bin_path, shebang, pattern=None):
