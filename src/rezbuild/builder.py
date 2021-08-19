@@ -30,10 +30,10 @@ import tarfile
 import tempfile
 
 # Import local modules
+from rezbuild.bin_utils import make_bins_movable
 from rezbuild.exceptions import ArgumentError
 from rezbuild.utils import clear_path
 from rezbuild.utils import get_delimiter
-from rezbuild.utils import make_bins_movable
 from rezbuild.utils import remove_tree
 
 
@@ -315,6 +315,7 @@ class CompileBuilder(ExtractBuilder):
                 self.compile(
                     os.path.join(extract_path, extract), install_path,
                     extra_config_args=extra_config_args)
+        make_bins_movable(os.path.join(install_path, "bin"))
 
 
 class PythonBuilder(RezBuilder, abc.ABC):

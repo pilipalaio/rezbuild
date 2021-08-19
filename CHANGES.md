@@ -11,8 +11,10 @@ Version 0.6.0 (August 17th, 2021)
 ---------------------------------
 Added:
   - Core dependencies.
-  - `utils.get_lcload_dylibs` function.
-  - `utils.is_macho` function.
+  - `bin_utils` module.
+
+Changed:
+  - Move bin relative function into `bin_utils` module.
 
 Version 0.5.1 (August 18th, 2021)
 ---------------------------------
