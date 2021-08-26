@@ -14,6 +14,9 @@ requires = [
 
 private_build_requires = [
     "git",
+    "setuptools-42+",
+    "setuptools_scm-3.4+",
+    "wheel",
 ]
 
 build_command = "python {root}/build.py {install}"

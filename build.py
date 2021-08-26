@@ -17,5 +17,4 @@ from rezbuild.builder import PythonSourceBuilder
 
 
 if __name__ == '__main__':
-    builder = PythonSourceBuilder()
-    builder.build()
+    PythonSourceBuilder().build(is_venv=False)

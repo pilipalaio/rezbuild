@@ -8,6 +8,11 @@ import stat
 
 
 def clear_path(path):
+    """Remove all the files and directories under the path.
+
+    Args:
+        path (str): The path to clear.
+    """
     if os.path.isdir(path):
         shutil.rmtree(path)
     os.makedirs(path)

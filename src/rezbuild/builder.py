@@ -295,7 +295,7 @@ class CompileBuilder(ExtractBuilder):
 
     def custom_build(
             self, extra_config_args=None, installer_regex=None,
-            install_path=None):
+            install_path=None, make_movable=False):
         """Run the compile build.
 
         Args:
@@ -315,7 +315,8 @@ class CompileBuilder(ExtractBuilder):
                 self.compile(
                     os.path.join(extract_path, extract), install_path,
                     extra_config_args=extra_config_args)
-        make_bins_movable(os.path.join(install_path, "bin"))
+        if make_movable:
+            make_bins_movable(os.path.join(install_path, "bin"))
 
 
 class PythonBuilder(RezBuilder, abc.ABC):

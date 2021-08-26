@@ -7,14 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.6.0 (August 17th, 2021)
+Version 0.6.0 (August 26th, 2021)
 ---------------------------------
 Added:
-  - Core dependencies.
+  - `install_requires` into `setup.cfg`.
   - `bin_utils` module.
+  - `utils.clear_path` function.
+  - `utils.get_relative_path` function.
 
 Changed:
   - Move bin relative function into `bin_utils` module.
+  - Support make bin movable on `CompileBuilder`.
 
 Version 0.5.1 (August 18th, 2021)
 ---------------------------------
