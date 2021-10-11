@@ -25,13 +25,17 @@ import os
 import platform
 import re
 import shutil
+import stat
 import subprocess
 import tarfile
 import tempfile
+import zipfile
 
 # Import local modules
 from rezbuild.bin_utils import make_bins_movable
+from rezbuild.constant import SHELL_CONTENT
 from rezbuild.exceptions import ArgumentError
+from rezbuild.exceptions import UnsupportedError
 from rezbuild.utils import clear_path
 from rezbuild.utils import get_delimiter
 from rezbuild.utils import remove_tree
@@ -90,7 +94,7 @@ class RezBuilder(abc.ABC):
         if os.environ.get("REZ_BUILD_INSTALL") == "1":
             if os.path.exists(self.install_path):
                 remove_tree(self.install_path)
-            shutil.copytree(self.workspace, self.install_path)
+            shutil.copytree(self.workspace, self.install_path, symlinks=True)
 
 
 class InstallBuilder(RezBuilder, abc.ABC):
@@ -177,6 +181,7 @@ class InstallBuilder(RezBuilder, abc.ABC):
             ArgumentError: When the installer search mode does not support.
         """
         regex = regex or r".*"
+        exclude_files = [".DS_Store"]
         if self._search_mode == self.__class__.LOCAL:
             if local_path:
                 path = os.path.join(local_path, self.variant_index)
@@ -187,6 +192,8 @@ class InstallBuilder(RezBuilder, abc.ABC):
                 path = os.path.join(self.source_path, "installers")
             files = []
             for filename in os.listdir(path):
+                if filename in exclude_files:
+                    continue
                 filepath = os.path.join(path, filename)
                 if os.path.isfile(filepath) and re.match(regex, filename):
                     files.append(filepath)
@@ -254,6 +261,12 @@ class ExtractBuilder(InstallBuilder):
                 extract_path = os.path.join(extract_path, name)
                 cmds = [installer, "-y", f"-o{extract_path}"]
                 subprocess.run(cmds, check=True)
+            elif installer.endswith(".zip"):
+                with zipfile.ZipFile(installer) as zip_file:
+                    zip_file.extractall(extract_path)
+            else:
+                suffix = installer.split(".")[-1]
+                raise UnsupportedError(f"Unsupported file format: {suffix}")
 
     def custom_build(self, extract_path=None, installer_regex=None):
         """Run the extract build.
@@ -306,6 +319,8 @@ class CompileBuilder(ExtractBuilder):
             install_path (str): The path to install the package. Note this is
                 different with the `self.install_path`. The path will pass to
                 the configure as the value of the prefix.
+            make_movable (bool): Whether to make the package movable. Default
+                is False.
         """
         with tempfile.TemporaryDirectory() as temp_dir:
             extract_path = os.path.join(temp_dir, "extract")
@@ -317,6 +332,88 @@ class CompileBuilder(ExtractBuilder):
                     extra_config_args=extra_config_args)
         if make_movable:
             make_bins_movable(os.path.join(install_path, "bin"))
+
+
+class MacOSBuilder(RezBuilder, abc.ABC):
+    """Include some common method for build macOS package."""
+
+    @staticmethod
+    def create_open_shell(app_name, path):
+        """Create shell to open macOS .app file.
+
+        Shell name is all lowercase and replace the space to underscore.
+
+        Args:
+            app_name (str): The macOS app name. Should end with `.app`.
+            path (str): The directory path to put the shell to.
+        """
+        shell_name = app_name.lower().replace(".app", "").replace(" ", "_")
+        shell_path = os.path.join(path, shell_name)
+        with open(shell_path, "w") as shell:
+            shell.write(SHELL_CONTENT.format(app_name=app_name))
+        mode = (stat.S_IXUSR + stat.S_IXGRP + stat.S_IXOTH + stat.S_IRUSR +
+                stat.S_IRGRP + stat.S_IROTH)
+        os.chmod(shell_path, mode)
+
+    @staticmethod
+    def extract_dmg(dmg_file, extract_path):
+        """Extract dmg file.
+
+        Args:
+            dmg_file (str): The path of the dmg file.
+            extract_path (str): The path to extract file to.
+        """
+        if not os.path.isdir(extract_path):
+            os.makedirs(extract_path)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                command = [
+                    "hdiutil", "attach", "-nobrowse", "-mountpoint", temp_dir,
+                    dmg_file
+                ]
+                subprocess.run(command, check=True)
+                shutil.copytree(
+                    temp_dir, extract_path, symlinks=True, dirs_exist_ok=True)
+            finally:
+                subprocess.run(["hdiutil", "detach", temp_dir], check=True)
+
+    @staticmethod
+    def extract_pkg(pkg_file, extract_path):
+        """Extract pkg file.
+
+        Will remove extract_path before extraction.
+
+        Args:
+            pkg_file (str): The path of the pkg file.
+            extract_path (str): The path to extract file to.
+        """
+        if os.path.isdir(extract_path):
+            remove_tree(extract_path)
+        command = ["pkgutil", "--expand-full", pkg_file, extract_path]
+        subprocess.run(command, check=True)
+
+
+class MacOSDmgBuilder(MacOSBuilder, InstallBuilder):
+    """Build rez package from macOS dmg installer."""
+
+    def custom_build(self, create_shell=True):
+        """Install dmg file as rez package.
+
+        Args:
+            create_shell (bool): Whether to create shell to open macOS `.app`
+                application. Default is True.
+        """
+        with tempfile.TemporaryDirectory() as extract_path:
+            for installer in self.get_installers():
+                if installer.endswith(".dmg"):
+                    self.extract_dmg(installer, extract_path)
+            for file_ in os.listdir(extract_path):
+                if file_.endswith(".app"):
+                    src = os.path.join(extract_path, file_)
+                    dst = os.path.join(self.workspace, file_)
+                    shutil.copytree(src, dst)
+                    if create_shell:
+                        self.create_open_shell(file_, self.workspace)
 
 
 class PythonBuilder(RezBuilder, abc.ABC):

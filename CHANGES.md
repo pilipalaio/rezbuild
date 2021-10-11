@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.7.0 (October 11th, 2021)
+----------------------------------
+Added:
+  - Support zip file in `ExtractBuilder`.
+  - Support macOS DMG file.
+
 Version 0.6.0 (August 26th, 2021)
 ---------------------------------
 Added:

@@ -176,6 +176,35 @@ package.
 
 Then run the command `rez build -i`, the package will be build and installed.
 
+###Build from dmg file(MacOSDmgBuilder)
+
+Make `build.py` like this:
+
+```python
+# Import third-party modules
+from rezbuild import MacOSDmgBuilder
+
+
+if __name__ == '__main__':
+    MacOSDmgBuilder().build()
+```
+
+Put archive file into `installers` folder.
+
+```text
+source_root/
+    |___installers/
+        |___installer.dmg
+    |___build.py
+    |___package.py
+```
+
+Then run command `rez build -i` from `source_root`.
+
+`MacOSDmgBuilder` will create a shell script in the package root, has a same
+with the `.app` folder. Set `create_shell` to `False` to prevent his creation.
+For example: `MacOSDmgBuilder().build(create_shell=False)`
+
 ### Build from archive file(ExtractBuilder)
 
 Make `build.py` like this:
