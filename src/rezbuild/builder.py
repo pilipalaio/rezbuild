@@ -419,18 +419,21 @@ class MacOSDmgBuilder(MacOSBuilder, InstallBuilder):
 class PythonBuilder(RezBuilder, abc.ABC):
     """This class include some common method for build python package."""
 
-    def change_shebang(self, root=None):
+    def change_shebang(self, root="", shebang=""):
         """Change all the shebang of entry files where in bin directory.
 
         Args:
             root (str): Where the entry files placed. Default is the bin
                 directory.
+            shebang (str): The shebang content you want to change to.
         """
         root = root or os.path.join(self.workspace, "bin")
         if platform.system() == "Windows":
-            make_bins_movable(root, "#!python.exe", "#!.+python.exe")
+            shebang = shebang or "#!python.exe"
+            make_bins_movable(root, shebang, "#!.+python.exe")
         else:
-            make_bins_movable(root, "/usr/bin/env python")
+            shebang = shebang or "/usr/bin/env python"
+            make_bins_movable(root, shebang)
 
     @staticmethod
     def install_wheel_file(wheel_file, install_path):
@@ -501,19 +504,20 @@ class PythonSourceBuilder(PythonBuilder):
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
 
-    def custom_build(self, is_change_shebang=False, is_venv=True):
+    def custom_build(self, is_change_shebang=False, is_venv=True, shebang=""):
         """Build package from source.
 
         Args:
             is_change_shebang (bool): Whether to change the shebang from the
                 bin files.
             is_venv (bool): Whether to create venv when build python package.
+            shebang (str): The shebang content you want to change to.
         """
         wheel_filepath = self.create_wheel(is_venv=is_venv)
         self.install_wheel_file(wheel_filepath, self.workspace)
         self.to_site_packages()
         if is_change_shebang:
-            self.change_shebang()
+            self.change_shebang(shebang=shebang)
 
     @staticmethod
     def get_no_pip_environment():
@@ -530,12 +534,13 @@ class PythonSourceBuilder(PythonBuilder):
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self, is_change_shebang=False):
+    def custom_build(self, is_change_shebang=False, shebang=""):
         """Build package from wheel file.
 
         Args:
             is_change_shebang (bool): Whether to change shebang from bin
                 directory.
+            shebang (str): The shebang content you want to change to.
         """
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
@@ -543,4 +548,4 @@ class PythonWheelBuilder(PythonBuilder, InstallBuilder):
         self.install_wheel_file(wheels[0], self.workspace)
         self.to_site_packages()
         if is_change_shebang:
-            self.change_shebang()
+            self.change_shebang(shebang=shebang)
