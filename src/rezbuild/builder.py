@@ -338,7 +338,7 @@ class MacOSBuilder(RezBuilder, abc.ABC):
     """Include some common method for build macOS package."""
 
     @staticmethod
-    def create_open_shell(app_name, path):
+    def create_open_shell(app_name, path, shell_name=""):
         """Create shell to open macOS .app file.
 
         Shell name is all lowercase and replace the space to underscore.
@@ -346,8 +346,10 @@ class MacOSBuilder(RezBuilder, abc.ABC):
         Args:
             app_name (str): The macOS app name. Should end with `.app`.
             path (str): The directory path to put the shell to.
+            shell_name (str): The shell name to Specify to.
         """
-        shell_name = app_name.lower().replace(".app", "").replace(" ", "_")
+        shell_name = (shell_name or
+                      app_name.lower().replace(".app", "").replace(" ", "_"))
         shell_path = os.path.join(path, shell_name)
         with open(shell_path, "w") as shell:
             shell.write(SHELL_CONTENT.format(app_name=app_name))
@@ -396,12 +398,13 @@ class MacOSBuilder(RezBuilder, abc.ABC):
 class MacOSDmgBuilder(MacOSBuilder, InstallBuilder):
     """Build rez package from macOS dmg installer."""
 
-    def custom_build(self, create_shell=True):
+    def custom_build(self, create_shell=True, shell_name=""):
         """Install dmg file as rez package.
 
         Args:
             create_shell (bool): Whether to create shell to open macOS `.app`
                 application. Default is True.
+            shell_name (str): The shell name to Specify to.
         """
         with tempfile.TemporaryDirectory() as extract_path:
             for installer in self.get_installers():
@@ -413,7 +416,8 @@ class MacOSDmgBuilder(MacOSBuilder, InstallBuilder):
                     dst = os.path.join(self.workspace, file_)
                     shutil.copytree(src, dst)
                     if create_shell:
-                        self.create_open_shell(file_, self.workspace)
+                        self.create_open_shell(
+                            file_, self.workspace, shell_name)
 
 
 class PythonBuilder(RezBuilder, abc.ABC):
