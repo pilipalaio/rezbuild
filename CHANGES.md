@@ -11,6 +11,7 @@ Version 0.9.0 (October 26th, 2021)
 ----------------------------------
 Added:
     `shell_name` parameter into `MacOSDmgBuilder`.
+    `MacOSBuilder` into `__all__`.
 
 Version 0.8.0 (October 22nd, 2021)
 ----------------------------------
