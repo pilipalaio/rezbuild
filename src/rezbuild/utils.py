@@ -40,11 +40,14 @@ def get_relative_path(from_path, to_path):
     from_path = from_path.replace("\\", "/")
     to_path = to_path.replace("\\", "/")
     folders1, folders2 = from_path.split("/"), to_path.split("/")
-    for i in range(min(len(folders1), len(folders2))):
+    length = min(len(folders1), len(folders2))
+    for i in range(length):
         folder1, folder2 = folders1[i], folders2[i]
         if folder1 != folder2:
-            return "/".join(['..'] * (len(folders1) - i) + folders2[i:])
-    return ""
+            length = i
+            break
+    return "/".join(['..'] * (len(folders1) - length) + folders2[length:])
+    # return ""
 
 
 def remove_tree(path):
