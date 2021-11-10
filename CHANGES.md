@@ -7,11 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.9.0 (October 26th, 2021)
-----------------------------------
+Version 0.9.0 (November 10th, 2021)
+-----------------------------------
 Added:
-    `shell_name` parameter into `MacOSDmgBuilder`.
-    `MacOSBuilder` into `__all__`.
+  - `shell_name` parameter into `MacOSDmgBuilder`.
+  - `MacOSBuilder` into `__all__`. 
+  - Function `bin_utils.make_bin_movable`.
+  - Method `bin_utils.MachO.parse_arch`.
+  - Parameter `extra_lib_dirs` into `bin_utils.make_bins_movable`.
+  - Parameter `extra_lib_dirs` into `bin_utils.MachO.make_macho_movable`.
+
+Changed:
+  - Remove parameter `rpath` from `bin_utils.make_bins_movable`.
+  - Remove parameter `rpath` from `bin_utils.MACHO.make_macho_movable`.
+
+Fixed:
+  - Get empty relative path bug in `utils.get_relative_path`.
+
+Removed:
+  - Method `bin_utils.MACHO.parse_load_command`.
 
 Version 0.8.0 (October 22nd, 2021)
 ----------------------------------
