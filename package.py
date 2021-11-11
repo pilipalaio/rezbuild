@@ -9,7 +9,7 @@ variants = []
 requires = [
     "build-0.3+",
     "pip-18+",
-    "python-3.8+",
+    "python-3.8+<4",
 ]
 
 private_build_requires = [

@@ -278,10 +278,16 @@ class ExtractBuilder(InstallBuilder):
         """
         extract_path = extract_path or os.path.join(self.build_path, "extract")
         self.extract(extract_path, installer_regex=installer_regex)
-        for extract in os.listdir(extract_path):
-            shutil.copytree(
-                os.path.join(extract_path, extract), self.workspace,
-                dirs_exist_ok=True)
+        for name in os.listdir(extract_path):
+            src = os.path.join(extract_path, name)
+            dst = os.path.join(self.workspace, name)
+            if os.path.isfile(src) or os.path.islink(src):
+                shutil.copy2(src, dst, follow_symlinks=False)
+            elif os.path.isdir(src):
+                shutil.copytree(src, dst, dirs_exist_ok=True)
+            else:
+                # Should never be executed.
+                raise UnsupportedError(f"Unsupported file format: {src}")
 
 
 class CompileBuilder(ExtractBuilder):
