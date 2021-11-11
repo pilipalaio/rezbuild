@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.9.1 (November 12th, 2021)
+-----------------------------------
+Changed:
+  - Update requires in `package.py`.
+
+Fixed:
+  - `ExtractBuilder` do not copy directory bug.
+  - `ExtractBuilder` can not copy file from the extract_path to workspace.
+
 Version 0.9.0 (November 10th, 2021)
 -----------------------------------
 Added:

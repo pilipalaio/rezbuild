@@ -47,7 +47,6 @@ def get_relative_path(from_path, to_path):
             length = i
             break
     return "/".join(['..'] * (len(folders1) - length) + folders2[length:])
-    # return ""
 
 
 def remove_tree(path):
