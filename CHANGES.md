@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.10.0 (December 22th, 2021)
+------------------------------------
+Add:
+  - `PythonSourceArchiveBuilder`.
+Changed:
+  - Function `PythonBuilder.install_wheel_file` to
+    `PythonBuilder.install_file_by_pip`
+
 Version 0.9.1 (November 12th, 2021)
 -----------------------------------
 Changed:
@@ -20,7 +28,7 @@ Version 0.9.0 (November 10th, 2021)
 -----------------------------------
 Added:
   - `shell_name` parameter into `MacOSDmgBuilder`.
-  - `MacOSBuilder` into `__all__`. 
+  - `MacOSBuilder` into `__all__`.
   - Function `bin_utils.make_bin_movable`.
   - Method `bin_utils.MachO.parse_arch`.
   - Parameter `extra_lib_dirs` into `bin_utils.make_bins_movable`.
@@ -94,7 +102,7 @@ Version 0.3.0 (July 29th, 2021)
 Added:
   - Add is_change_shabang options into
     `rezbuild.PythonSourceBuilder.custom_build`.
-    
+
 Changed:
   - Update chinese documents.
 
@@ -105,7 +113,7 @@ Added:
   - Add is_change_shabang options into
     `rezbuild.PythonWheelBuilder.custom_build`.
   - Add content of README.md file.
-  - Add README_zh_CN.md file.  
+  - Add README_zh_CN.md file.
   - Add forgotten change log of version 0.1.1.
 
 Fixed:
