@@ -19,6 +19,12 @@ class FileNotExistError(RezBuildException):
     pass
 
 
+class ReNotMatchError(RezBuildException):
+    """When the regex does not match."""
+
+    pass
+
+
 class UnsupportedError(RezBuildException):
     """When something unsupported."""
 
