@@ -13,6 +13,7 @@ import subprocess
 
 # Import local modules
 from rezbuild.exceptions import ArgumentError
+from rezbuild.exceptions import ReNotMatchError
 from rezbuild.utils import get_relative_path
 
 
@@ -25,31 +26,39 @@ def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
         is_bin (bool): Whether the file is a binary file.
         origin_shebang (str): The original shebang to replaced.
     """
-    read_mode, write_mode = "r", "w"
-    if is_bin:
-        read_mode += "b"
-        write_mode += "b"
     if not shebang.startswith("#!"):
         shebang = f"#!{shebang}"
     if origin_shebang and not origin_shebang.startswith("#!"):
         origin_shebang = f"#!{origin_shebang}"
 
+    read_mode, write_mode = "r", "w"
+    if is_bin:
+        read_mode += "b"
+        write_mode += "b"
+        shebang = bytes(shebang, encoding="utf-8")
+
     with open(filepath, read_mode) as file:
         content = file.read()
 
     if origin_shebang and is_bin:
-        new_shebang = bytes(shebang, encoding="utf-8")
+        shebang = bytes(shebang, encoding="utf-8")
         origin_shebang = bytes(origin_shebang, encoding="utf-8")
-        new_shebang = new_shebang.ljust(len(origin_shebang), b" ")
-        new_content = content.replace(origin_shebang, new_shebang)
+        shebang = shebang.ljust(len(origin_shebang), b" ")
     elif origin_shebang:
-        new_content = content.replace(origin_shebang, shebang)
+        pass
+    elif is_bin:
+        if match := re.match(b"#!.+", content):
+            origin_shebang = match.group(0)
+        else:
+            raise ReNotMatchError(f"Can't find shebang in file `{filepath}`")
     else:
-        origin_shebang = re.match("#!.+", content).group(0)
-        new_content = content.replace(origin_shebang, shebang)
+        if match := re.match("#!.+", content):
+            origin_shebang = match.group(0)
+        else:
+            raise ReNotMatchError(f"Can't find shebang in file `{filepath}`")
 
     with open(filepath, write_mode) as file:
-        file.write(new_content)
+        file.write(content.replace(origin_shebang, shebang))
 
 
 def get_windows_shebang(filepath, pattern):

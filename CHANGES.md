@@ -7,9 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.10.1 (December 31st, 2021)
+------------------------------------
+Added:
+  - `ReNotMatchError`.
+Fixed:
+  - Change binary shebang bug (#11)
+
 Version 0.10.0 (December 22th, 2021)
 ------------------------------------
-Add:
+Added:
   - `PythonSourceArchiveBuilder`.
 Changed:
   - Function `PythonBuilder.install_wheel_file` to
