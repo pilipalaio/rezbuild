@@ -41,7 +41,6 @@ def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
         content = file.read()
 
     if origin_shebang and is_bin:
-        shebang = bytes(shebang, encoding="utf-8")
         origin_shebang = bytes(origin_shebang, encoding="utf-8")
         shebang = shebang.ljust(len(origin_shebang), b" ")
     elif origin_shebang:
