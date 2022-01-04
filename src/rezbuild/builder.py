@@ -430,7 +430,7 @@ class PythonBuilder(RezBuilder, abc.ABC):
     """This class include some common method for build python package."""
 
     def change_shebang(self, root="", shebang=""):
-        """Change all the shebang of entry files where in bin directory.
+        """Change all the shebang of entry files.
 
         Args:
             root (str): Where the entry files placed. Default is the bin
@@ -446,18 +446,40 @@ class PythonBuilder(RezBuilder, abc.ABC):
             make_bins_movable(root, shebang)
 
     @staticmethod
-    def install_file_by_pip(file, install_path):
+    def install_wheel_by_pip(wheel_file, install_path):
         """Install file by pip.
 
         Args:
-            file (str): The path of the file to install.
+            wheel_file (str): The path of the wheel file to install.
             install_path (str): Path to install to.
         """
         command = [
             "pip", "install", "--ignore-installed", "--no-deps",
-            "--no-compile", "--target", install_path, file]
+            "--no-compile", "--target", install_path, wheel_file]
         print(f"\nInstall command: {' '.join(command)}")
         subprocess.run(command, check=True)
+
+    def install_wheel(
+            self, wheel_file, install_path="", change_shebang=False,
+            shebang=""):
+        """Install wheel file.
+
+        This function will install wheel file, move python pakcages into
+        site-packages directory and change shebang if needed.
+
+        Args:
+            wheel_file (str): The path of the wheel file to install.
+            install_path (str, optional): Path to install to. Default is
+                workspace.
+            change_shebang (bool, optional): Whether to change shebang in bin
+                directory. Default is False.
+            shebang (str, optional): The shebang content you want to change to.
+        """
+        install_path = install_path or self.workspace
+        self.install_wheel_by_pip(wheel_file, install_path)
+        self.to_site_packages()
+        if change_shebang:
+            self.change_shebang(shebang=shebang)
 
     def to_site_packages(self, ignores=None):
         """Copy python file to site-packages directory.
@@ -480,26 +502,6 @@ class PythonBuilder(RezBuilder, abc.ABC):
                 shutil.move(src, site_packages_path)
 
 
-class PythonSourceArchiveBuilder(PythonBuilder, InstallBuilder):
-    """Build the external package from python source archive file."""
-
-    def custom_build(self, is_change_shebang=False, shebang=""):
-        """Build package from python source archive file.
-
-        Args:
-            is_change_shebang (bool): Whether to change shebang from bin
-                directory.
-            shebang (str): The shebang content you want to change to.
-        """
-        archives = [archive for archive in self.get_installers()
-                    if archive.endswith(".tar.gz")]
-        # Python installer always only one archive file.
-        self.install_file_by_pip(archives[0], self.workspace)
-        self.to_site_packages()
-        if is_change_shebang:
-            self.change_shebang(shebang=shebang)
-
-
 class PythonSourceBuilder(PythonBuilder):
     """This class build packages from the standard python source code.
 
@@ -508,21 +510,25 @@ class PythonSourceBuilder(PythonBuilder):
 
     """
 
-    def create_wheel(self, is_venv=True):
+    def create_wheel(self, source_root="", use_venv=True):
         """Create wheel file from source code and put into a temp dir.
 
         Args:
-            is_venv (bool): Whether to create venv when build python package.
+            source_root (str, optional): The source root. Default is
+                self.source_path.
+            use_venv (bool, optional): Whether to create venv when build python
+                package.
 
         Returns:
             str: The wheel file path.
         """
+        source_root = source_root or self.source_path
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_src = os.path.join(temp_dir, "src")
-            shutil.copytree(self.source_path, temp_src)
+            shutil.copytree(source_root, temp_src)
             wheel_dir = os.path.join(self.build_path, "wheel_dir")
             command = ["pyproject-build", "-o", wheel_dir]
-            if not is_venv:
+            if not use_venv:
                 command.append("--no-isolation")
                 env = dict(os.environ)
             else:
@@ -534,20 +540,18 @@ class PythonSourceBuilder(PythonBuilder):
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
 
-    def custom_build(self, is_change_shebang=False, is_venv=True, shebang=""):
+    def custom_build(self, change_shebang=False, use_venv=True, shebang=""):
         """Build package from source.
 
         Args:
-            is_change_shebang (bool): Whether to change the shebang from the
+            change_shebang (bool): Whether to change the shebang from the
                 bin files.
-            is_venv (bool): Whether to create venv when build python package.
+            use_venv (bool): Whether to create venv when build python package.
             shebang (str): The shebang content you want to change to.
         """
-        wheel_filepath = self.create_wheel(is_venv=is_venv)
-        self.install_file_by_pip(wheel_filepath, self.workspace)
-        self.to_site_packages()
-        if is_change_shebang:
-            self.change_shebang(shebang=shebang)
+        wheel_file = self.create_wheel(use_venv=use_venv)
+        self.install_wheel(
+            wheel_file, change_shebang=change_shebang, shebang=shebang)
 
     @staticmethod
     def get_no_pip_environment():
@@ -561,21 +565,43 @@ class PythonSourceBuilder(PythonBuilder):
         return env
 
 
+class PythonSourceArchiveBuilder(PythonSourceBuilder, InstallBuilder):
+    """Build the external package from python source archive file."""
+
+    def custom_build(self, change_shebang=False, use_venv=True, shebang=""):
+        """Build package from python source archive file.
+
+        Args:
+            change_shebang (bool): Whether to change shebang from bin
+                directory.
+            use_venv (bool): Whether to create venv when build python package.
+            shebang (str): The shebang content you want to change to.
+        """
+        archives = [archive for archive in self.get_installers()
+                    if archive.endswith(".tar.gz")]
+        with tarfile.open(archives[0], "r") as file:
+            file.extractall(self.build_path)
+        dirname = os.path.basename(archives[0]).replace(".tar.gz", "")
+        source_root = os.path.join(self.build_path, dirname)
+        wheel_file = self.create_wheel(source_root, use_venv=use_venv)
+        self.install_wheel(
+            # Python installer always only one archive file.
+            wheel_file, change_shebang=change_shebang, shebang=shebang)
+
+
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self, is_change_shebang=False, shebang=""):
+    def custom_build(self, change_shebang=False, shebang=""):
         """Build package from wheel file.
 
         Args:
-            is_change_shebang (bool): Whether to change shebang from bin
+            change_shebang (bool): Whether to change shebang from bin
                 directory.
             shebang (str): The shebang content you want to change to.
         """
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
-        # Python installer always only one whl file.
-        self.install_file_by_pip(wheels[0], self.workspace)
-        self.to_site_packages()
-        if is_change_shebang:
-            self.change_shebang(shebang=shebang)
+        self.install_wheel(
+            # Python installer always only one whl file.
+            wheels[0], change_shebang=change_shebang, shebang=shebang)

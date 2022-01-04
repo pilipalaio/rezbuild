@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.11.0 (January 4th, 2022)
+----------------------------------
+Added:
+  - `PythonBuilder.install_wheel` method.
+  - `PythonSourceBuilder.create_wheel` add parameter `source_root`.
+
+Changed:
+  - All the parameter named `is_venv` to `use_venv`.
+  - All the parameter named `is_change_shebang` to `change_shebang`.
+  - `PythonBuilder.install_file_by_pip` to 
+    `PythonBuilder.install_wheel_by_pip`.
+  - Use wheel file to install python source archive file.   
+
 Version 0.10.2 (December 31st, 2021)
 ------------------------------------
 Fixed:
