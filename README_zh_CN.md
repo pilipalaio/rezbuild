@@ -26,7 +26,20 @@ rezbuild，则构建时还 需要 git 和 setuptools_scm。
 
 ### 如何安装
 
-1.通过自己安装(需要环境中有其他版本的 rezbuild)
+1.从源代码安装(适用于未使用过 rezbuild，或者系统中没有 rezbuild 的用户)
+
+如果你第一次使用 rezbuild，或你的系统中没有其他版本的 rezbuild，你也可以通过源代码来安装
+rezbuild。请确保所有依赖项均已安装(python-3.6+，build-0.3+，pip-18+)。
+
+然后 clone 这个项目，进入代码根目录并运行构建命令即可，范例命令如下：
+
+```shell
+git clone git@gitlab.com:Pili-Pala/rezbuild.git
+cd rezbuild
+rez build -i
+```
+
+2.通过自身安装(需要环境中有其他版本的 rezbuild)
 
 rezbuild 
 可以自己安装自己，这也是推荐的方式。请确保所有的依赖项都已安装到您的环境中，包括 
@@ -82,20 +95,7 @@ def commands():
 进入根目录（install_rezbuild），并运行如下命令：`rez build -i`
 当命令执行完成后，该包就已作为 rez 包安装完成了。
 
-2.从源代码安装
 
-如果你第一次使用 rezbuild，或你的系统中没有其他版本的 rezbuild，你也可以通过源代码来安装
-rezbuild。请确保所有依赖项均已安装(python-3.6+，build-0.3+，pip-18+，
-[git，setuptools_scm])。如果系统中没有 setuptools_scm，也可以手动将 `package.py` 中的
-`version` 字段改为对应版本。该字段的默认行为是自动通过 setuptools_scm 来获取正确的版本号。
-
-然后 clone 这个项目，进入代码根目录并运行构建命令即可，范例命令如下：
-
-```shell
-git clone git@gitlab.com:Pili-Pala/rezbuild.git
-cd rezbuild
-rez build -i
-```
 
 3.通过 PyPI 安装
 

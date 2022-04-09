@@ -37,6 +37,7 @@ from rezbuild.constant import SHELL_CONTENT
 from rezbuild.exceptions import ArgumentError
 from rezbuild.exceptions import UnsupportedError
 from rezbuild.utils import clear_path
+from rezbuild.utils import copy_tree
 from rezbuild.utils import get_delimiter
 from rezbuild.utils import remove_tree
 
@@ -249,7 +250,8 @@ class ExtractBuilder(InstallBuilder):
         Args:
             extract_path (str): The path to extract to.
             installer_regex (str): The regex to match the installer name. Only
-                the matched installer will be extracted and compiled.
+                the matched installer will be extracted. Will catch all the
+                installers if not given.
         """
         clear_path(extract_path)
         for installer in self.get_installers(regex=installer_regex):
@@ -268,13 +270,23 @@ class ExtractBuilder(InstallBuilder):
                 suffix = installer.split(".")[-1]
                 raise UnsupportedError(f"Unsupported file format: {suffix}")
 
-    def custom_build(self, extract_path=None, installer_regex=None):
+    def custom_build(
+            self, extract_path=None, installer_regex=None, dirs_exist_ok=True,
+            follow_symlinks=True, file_overwrite=False):
         """Run the extract build.
 
         Args:
-            extract_path (str): The path to extract to.
+            extract_path (str): The path to extract to. Will create a directory
+                named `extract` under the build path if not given.
             installer_regex (str): The regex to match the installer name. Only
-                the matched installer will be extracted and compiled.
+                the matched installer will be extracted. Will catch all the
+                installers if not given.
+            dirs_exist_ok (bool): Whether to copy when the destination
+                directory already exists. Default is True.
+            follow_symlinks (bool): Whether to copy the symbolic links as
+                symbolic links. Default is True.
+            file_overwrite: Whether to overwrite the file when the destination
+                file already exists. Default is False.
         """
         extract_path = extract_path or os.path.join(self.build_path, "extract")
         self.extract(extract_path, installer_regex=installer_regex)
@@ -284,9 +296,13 @@ class ExtractBuilder(InstallBuilder):
             if os.path.isfile(src) or os.path.islink(src):
                 shutil.copy2(src, dst, follow_symlinks=False)
             elif os.path.isdir(src):
-                shutil.copytree(src, dst, dirs_exist_ok=True)
+                # shutil.copytree(src, dst, dirs_exist_ok=True)
+                copy_tree(
+                    src, dst, dirs_exist_ok=dirs_exist_ok,
+                    follow_symlinks=follow_symlinks,
+                    file_overwrite=file_overwrite)
             else:
-                # Should never be executed.
+                # Should never be execute.
                 raise UnsupportedError(f"Unsupported file format: {src}")
 
 
@@ -380,8 +396,9 @@ class MacOSBuilder(RezBuilder, abc.ABC):
                     dmg_file
                 ]
                 subprocess.run(command, check=True)
-                shutil.copytree(
-                    temp_dir, extract_path, symlinks=True, dirs_exist_ok=True)
+                copy_tree(
+                    temp_dir, extract_path, dirs_exist_ok=True,
+                    follow_symlinks=True)
             finally:
                 subprocess.run(["hdiutil", "detach", temp_dir], check=True)
 

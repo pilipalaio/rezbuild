@@ -13,6 +13,12 @@ class ArgumentError(RezBuildException):
     pass
 
 
+class FileAlreadyExistError(RezBuildException):
+    """When the file already exist."""
+
+    pass
+
+
 class FileNotExistError(RezBuildException):
     """When the file does not exist."""
 

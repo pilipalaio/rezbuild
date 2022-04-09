@@ -26,7 +26,25 @@ setuptools_scm are also needed.
 
 ### Installing
 
-1.Install by itself(Need rezbuild in you rez repository)
+There are 3 ways to install rezbuild, choose according to your own situation.
+
+1.Install by source for rez(New in rezbuild, or do not have rezbuild in you
+environment)
+
+If you are new in rezbuild, or there's no other version of rezbuild in you rez
+environment, you can use rez to install this package from source. Make sure all
+the requirement already installed into you rez environment(python-3.6+,
+build-0.3+, pip-18+).
+
+Then, clone this project, cd the source root and run the rez install command:
+
+```shell
+git clone git@gitlab.com:Pili-Pala/rezbuild.git
+cd rezbuild
+rez build -i
+```
+
+2.Install by itself(Need rezbuild in you rez repository)
 
 The recommended way to install this package is using itself. Make sure you have
 all the requirements are installed into rez environment, include rezbuild
@@ -81,24 +99,6 @@ def commands():
 
 Then, run this command in the root directory `rez build -i`.
 After that, this package will be installed as a rez package.
-
-2.Install by source for rez
-
-If you are new in rezbuild, or there's no other version of rezbuild in you rez
-environment, you can use rez to install this package from source. Make sure all
-the requirement already installed into you rez environment(python-3.6+,
-build-0.3+, pip-18+, [git, setuptools_scm]). If you do not have setuptools_scm
-in you rez environment, please modify the `version` argument to the version of
-rezbuild you download in `package.py` file . By the way, the default way to get
-the version number is using setuptools_scm to auto get it.
-
-Then, clone this project, cd the source root and run the rez install command:
-
-```shell
-git clone git@gitlab.com:Pili-Pala/rezbuild.git
-cd rezbuild
-rez build -i
-```
 
 3.Install from pypi
 
