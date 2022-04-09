@@ -46,12 +46,14 @@ def change_shebang(filepath, shebang, is_bin=False, origin_shebang=""):
     elif origin_shebang:
         pass
     elif is_bin:
-        if match := re.match(b"#!.+", content):
+        match = re.match(b"#!.+", content)
+        if match:
             origin_shebang = match.group(0)
         else:
             raise ReNotMatchError(f"Can't find shebang in file `{filepath}`")
     else:
-        if match := re.match("#!.+", content):
+        match = re.match("#!.+", content)
+        if match:
             origin_shebang = match.group(0)
         else:
             raise ReNotMatchError(f"Can't find shebang in file `{filepath}`")
