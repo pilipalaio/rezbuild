@@ -35,6 +35,7 @@ import zipfile
 from rezbuild.bin_utils import make_bins_movable
 from rezbuild.constant import SHELL_CONTENT
 from rezbuild.exceptions import ArgumentError
+from rezbuild.exceptions import InstallerNotFoundError
 from rezbuild.exceptions import UnsupportedError
 from rezbuild.utils import clear_path
 from rezbuild.utils import copy_tree
@@ -619,6 +620,8 @@ class PythonWheelBuilder(PythonBuilder, InstallBuilder):
         """
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
+        if len(wheels) == 0:
+            raise InstallerNotFoundError("Wheel installer file not found.")
         self.install_wheel(
             # Python installer always only one whl file.
             wheels[0], change_shebang=change_shebang, shebang=shebang)

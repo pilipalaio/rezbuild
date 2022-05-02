@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.12.2 (May, 2th, 2022)
+-------------------------------
+Fixed:
+  - Raise InstallerNotFoundError when can't find any installers.
+
 Version 0.12.1 (April, 5th, 2022)
 ---------------------------------
 Fixed:
