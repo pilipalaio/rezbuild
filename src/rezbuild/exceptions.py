@@ -25,6 +25,12 @@ class FileNotExistError(RezBuildException):
     pass
 
 
+class InstallerNotFoundError(RezBuildException):
+    """When can't find installer."""
+
+    pass
+
+
 class ReNotMatchError(RezBuildException):
     """When the regex does not match."""
 
