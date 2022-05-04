@@ -465,9 +465,8 @@ class PythonBuilder(RezBuilder, abc.ABC):
             else:
                 shebang = shebang or "/usr/bin/env python"
                 make_bins_movable(root, shebang)
-        except ReNotMatchError as e:
-            logger = logging.getLogger(__name__)
-            logger.warning(
+        except ReNotMatchError:
+            logging.getLogger(__name__).warning(
                 f"Shebang regex `{shebang}` not match, skip changing shebang")
 
     @staticmethod
@@ -489,7 +488,7 @@ class PythonBuilder(RezBuilder, abc.ABC):
             shebang=""):
         """Install wheel file.
 
-        This function will install wheel file, move python pakcages into
+        This function will install wheel file, move python packages into
         site-packages directory and change shebang if needed.
 
         Args:
@@ -505,7 +504,6 @@ class PythonBuilder(RezBuilder, abc.ABC):
         self.to_site_packages()
         if change_shebang:
             self.change_shebang(shebang=shebang)
-
 
     def to_site_packages(self, ignores=None):
         """Copy python file to site-packages directory.
