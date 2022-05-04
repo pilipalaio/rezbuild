@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.12.2 (May, 4th, 2022)
+Version 0.13.0 (May, 4th, 2022)
 -------------------------------
 Added:
   - `rezbuilg.log` module.
