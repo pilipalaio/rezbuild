@@ -2,7 +2,7 @@
 
 name = "rezbuild"
 
-version = "0.12.2"
+version = "0.13.0"
 
 tools = []
 
