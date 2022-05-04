@@ -18,6 +18,7 @@ Changed:
 Fixed:
   - Raise InstallerNotFoundError when can't find any installers.
   - Skip the ReNotMatchError and print an error.
+  - Support gui_scripts in PythonBuilder
 
 Version 0.12.1 (April, 5th, 2022)
 ---------------------------------

@@ -33,10 +33,12 @@ import tempfile
 import zipfile
 
 # Import local modules
+from rezbuild.bin_utils import make_bin_movable
 from rezbuild.bin_utils import make_bins_movable
 from rezbuild.constants import SHELL_CONTENT
 from rezbuild.exceptions import ArgumentError
 from rezbuild.exceptions import InstallerNotFoundError
+from rezbuild.exceptions import NotFoundPythonInBinError
 from rezbuild.exceptions import ReNotMatchError
 from rezbuild.exceptions import UnsupportedError
 from rezbuild.utils import clear_path
@@ -449,6 +451,23 @@ class MacOSDmgBuilder(MacOSBuilder, InstallBuilder):
 class PythonBuilder(RezBuilder, abc.ABC):
     """This class include some common method for build python package."""
 
+    @staticmethod
+    def determine_python(filepath):
+        """Determine the entry point is using python.exe or pythonw.exe.
+
+        Args:
+            filepath (str): Path of the bin entry points.
+        """
+        with open(filepath, "rb") as file:
+            content = file.read()
+        if b"python.exe" in content:
+            return "python.exe"
+        elif b"pythonw.exe" in content:
+            return "pythonw.exe"
+        else:
+            raise NotFoundPythonInBinError(
+                f"Not found python executable path in {filepath}")
+
     def change_shebang(self, root="", shebang=""):
         """Change all the shebang of entry files.
 
@@ -458,16 +477,23 @@ class PythonBuilder(RezBuilder, abc.ABC):
             shebang (str): The shebang content you want to change to.
         """
         root = root or os.path.join(self.workspace, "bin")
-        try:
+        for filename in os.listdir(root):
+            bin_file = os.path.join(root, filename)
             if platform.system() == "Windows":
-                shebang = shebang or "#!python.exe"
-                make_bins_movable(root, shebang, "#!.+python.exe")
+                try:
+                    shebang_ = (
+                        shebang or "#!" + self.determine_python(bin_file))
+                    # https://regex101.com/r/HENaAh/1
+                    make_bin_movable(bin_file, shebang_, "#!.+pythonw?.exe")
+                except NotFoundPythonInBinError as e:
+                    logging.getLogger(__name__).warning(str(e))
+                except ReNotMatchError:
+                    logging.getLogger(__name__).warning(
+                        "Shebang regex #!.+pythonw?.exe not match, skip "
+                        "changing shebang")
             else:
                 shebang = shebang or "/usr/bin/env python"
-                make_bins_movable(root, shebang)
-        except ReNotMatchError:
-            logging.getLogger(__name__).warning(
-                f"Shebang regex `{shebang}` not match, skip changing shebang")
+                make_bin_movable(bin_file, shebang)
 
     @staticmethod
     def install_wheel_by_pip(wheel_file, install_path):

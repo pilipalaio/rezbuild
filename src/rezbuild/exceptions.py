@@ -31,6 +31,12 @@ class InstallerNotFoundError(RezBuildException):
     pass
 
 
+class NotFoundPythonInBinError(RezBuildException):
+    """When can't find python executable path in entry point file."""
+
+    pass
+
+
 class ReNotMatchError(RezBuildException):
     """When the regex does not match."""
 
