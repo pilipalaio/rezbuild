@@ -1,5 +1,6 @@
 """Constants."""
 
+PACKAGE_NAME = "rezbuild"
 
 SHELL_CONTENT = """#!/bin/bash
 

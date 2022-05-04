@@ -21,6 +21,7 @@ Rez builder help to build rez packages.
 
 # Import built-in modules
 import abc
+import logging
 import os
 import platform
 import re
@@ -33,9 +34,10 @@ import zipfile
 
 # Import local modules
 from rezbuild.bin_utils import make_bins_movable
-from rezbuild.constant import SHELL_CONTENT
+from rezbuild.constants import SHELL_CONTENT
 from rezbuild.exceptions import ArgumentError
 from rezbuild.exceptions import InstallerNotFoundError
+from rezbuild.exceptions import ReNotMatchError
 from rezbuild.exceptions import UnsupportedError
 from rezbuild.utils import clear_path
 from rezbuild.utils import copy_tree
@@ -456,12 +458,17 @@ class PythonBuilder(RezBuilder, abc.ABC):
             shebang (str): The shebang content you want to change to.
         """
         root = root or os.path.join(self.workspace, "bin")
-        if platform.system() == "Windows":
-            shebang = shebang or "#!python.exe"
-            make_bins_movable(root, shebang, "#!.+python.exe")
-        else:
-            shebang = shebang or "/usr/bin/env python"
-            make_bins_movable(root, shebang)
+        try:
+            if platform.system() == "Windows":
+                shebang = shebang or "#!python.exe"
+                make_bins_movable(root, shebang, "#!.+python.exe")
+            else:
+                shebang = shebang or "/usr/bin/env python"
+                make_bins_movable(root, shebang)
+        except ReNotMatchError as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Shebang regex `{shebang}` not match, skip changing shebang")
 
     @staticmethod
     def install_wheel_by_pip(wheel_file, install_path):
@@ -498,6 +505,7 @@ class PythonBuilder(RezBuilder, abc.ABC):
         self.to_site_packages()
         if change_shebang:
             self.change_shebang(shebang=shebang)
+
 
     def to_site_packages(self, ignores=None):
         """Copy python file to site-packages directory.

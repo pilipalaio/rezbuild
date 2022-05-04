@@ -7,10 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.12.2 (May, 2th, 2022)
+Version 0.12.2 (May, 4th, 2022)
 -------------------------------
+Added:
+  - `rezbuilg.log` module.
+
+Changed:
+  - Rename `rezbuild.constant` to `rezbuild.constants`
+
 Fixed:
   - Raise InstallerNotFoundError when can't find any installers.
+  - Skip the ReNotMatchError and print an error.
 
 Version 0.12.1 (April, 5th, 2022)
 ---------------------------------

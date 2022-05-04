@@ -9,6 +9,7 @@ from rezbuild.builder import PythonSourceArchiveBuilder
 from rezbuild.builder import PythonSourceBuilder
 from rezbuild.builder import PythonWheelBuilder
 from rezbuild.builder import RezBuilder
+from rezbuild.log import init_logger
 
 
 __all__ = [
@@ -23,3 +24,5 @@ __all__ = [
     "PythonWheelBuilder",
     "RezBuilder",
 ]
+
+init_logger()
