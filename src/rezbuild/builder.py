@@ -59,9 +59,6 @@ class RezBuilder(abc.ABC):
         self.source_path = os.environ["REZ_BUILD_SOURCE_PATH"]
         self.variant_index = os.environ["REZ_BUILD_VARIANT_INDEX"]
         self.workspace = os.path.join(self.build_path, "workspace")
-        # self.temp_dirs list all the temporary directory objects that create
-        # by tempfile.
-        self.temp_dirs = []
         super().__init__(**kwargs)
 
     def build(self, **kwargs):
@@ -69,12 +66,6 @@ class RezBuilder(abc.ABC):
         self.create_work_dir()
         self.custom_build(**kwargs)
         self.install()
-        self.clean_temp_dir()
-
-    def clean_temp_dir(self):
-        """Clean all the temp dir."""
-        for temp_dir in self.temp_dirs:
-            temp_dir.cleanup()
 
     def create_work_dir(self):
         """Create the work directory.
@@ -527,7 +518,6 @@ class PythonBuilder(RezBuilder, abc.ABC):
         """
         install_path = install_path or self.workspace
         self.install_wheel_by_pip(wheel_file, install_path)
-        self.to_site_packages()
         if change_shebang:
             self.change_shebang(shebang=shebang)
 
@@ -577,15 +567,21 @@ class PythonSourceBuilder(PythonBuilder):
             temp_src = os.path.join(temp_dir, "src")
             shutil.copytree(source_root, temp_src)
             wheel_dir = os.path.join(self.build_path, "wheel_dir")
+            if os.path.exists(wheel_dir):
+                remove_tree(wheel_dir)
+            os.makedirs(wheel_dir)
             command = ["pyproject-build", "-o", wheel_dir]
             if not use_venv:
                 command.append("--no-isolation")
                 env = dict(os.environ)
             else:
+                # Remove pip from environment to let venv install it.
                 env = self.get_no_pip_environment()
             print(f"\nWheel create command: {' '.join(command)}")
-            # Remove pip from environment to let venv install it.
             subprocess.run(command, check=True, cwd=temp_src, env=env)
+            # Remove temporary manually as sometimes git files will cause some
+            # permission error.
+            remove_tree(temp_dir)
         wheel_file_name = [
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)

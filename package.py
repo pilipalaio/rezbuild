@@ -23,4 +23,4 @@ build_command = "python {root}/build.py {install}"
 
 
 def commands():
-    env.PYTHONPATH.append("{root}/site-packages")
+    env.PYTHONPATH.append("{root}")

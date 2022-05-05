@@ -7,18 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Version 0.13.0 (May, 4th, 2022)
+Version 0.13.0 (May, 5th, 2022)
 -------------------------------
 Added:
-  - `rezbuilg.log` module.
+  - `rezbuild.log` module.
+  - clean the wheel directory before create wheel file.
 
 Changed:
-  - Rename `rezbuild.constant` to `rezbuild.constants`
+  - Rename `rezbuild.constant` to `rezbuild.constants`.
 
 Fixed:
   - Raise InstallerNotFoundError when can't find any installers.
   - Skip the ReNotMatchError and print an error.
-  - Support gui_scripts in PythonBuilder
+  - Support gui_scripts in PythonBuilder.
+
+Removed:
+  - Remove `to_site_packages` function, package will put in the installation
+      directory.
+  - remove `RezBuilder.temp_dirs`.
 
 Version 0.12.1 (April, 5th, 2022)
 ---------------------------------
