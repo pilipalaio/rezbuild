@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.13.1 (May, 7th, 2022)
+-------------------------------
+Fixed:
+  Remake temp directory after remove it manually.
+
 Version 0.13.0 (May, 5th, 2022)
 -------------------------------
 Added:

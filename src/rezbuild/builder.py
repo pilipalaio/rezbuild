@@ -582,6 +582,7 @@ class PythonSourceBuilder(PythonBuilder):
             # Remove temporary manually as sometimes git files will cause some
             # permission error.
             remove_tree(temp_dir)
+            os.makedirs(temp_dir)
         wheel_file_name = [
             name for name in os.listdir(wheel_dir) if name.endswith(".whl")][0]
         return os.path.join(wheel_dir, wheel_file_name)
