@@ -94,6 +94,20 @@ class RezBuilder(abc.ABC):
             shutil.copytree(self.workspace, self.install_path, symlinks=True)
 
 
+class CopyBuilder(RezBuilder):
+    """Copy all files into package root."""
+
+    def custom_build(self, root=""):
+        """Copy files to workspace.
+
+        Args:
+            root (str): The source path to copy files from. Default is
+                `src` folder under the source path.
+        """
+        root = root or os.path.join(self.source_path, "src")
+        copy_tree(root, self.workspace, dirs_exist_ok=True)
+
+
 class InstallBuilder(RezBuilder, abc.ABC):
     """This class is the base builder to build package from installer."""
 
