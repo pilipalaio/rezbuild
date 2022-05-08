@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.14.0 (May, 8th, 2022)
+-------------------------------
+Added:
+  - `CopyBuilder`.
+
 Version 0.13.1 (May, 7th, 2022)
 -------------------------------
 Fixed:
@@ -34,7 +39,7 @@ Removed:
 Version 0.12.1 (April, 5th, 2022)
 ---------------------------------
 Fixed:
-  - Remove assignment expression
+  - Remove assignment expression.
 
 Version 0.12.0 (April, 4th, 2022)
 ---------------------------------
