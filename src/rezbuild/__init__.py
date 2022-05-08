@@ -1,5 +1,6 @@
 # Import local modules
 from rezbuild.builder import CompileBuilder
+from rezbuild.builder import CopyBuilder
 from rezbuild.builder import ExtractBuilder
 from rezbuild.builder import InstallBuilder
 from rezbuild.builder import MacOSBuilder
@@ -14,6 +15,7 @@ from rezbuild.log import init_logger
 
 __all__ = [
     "CompileBuilder",
+    "CopyBuilder",
     "ExtractBuilder",
     "InstallBuilder",
     "MacOSBuilder",

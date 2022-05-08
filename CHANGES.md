@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.14.1 (May, 8th, 2022)
+-------------------------------
+Added:
+  - Add `CopyBuilder` to `rezbuild.__init__`.
+
 Version 0.14.0 (May, 8th, 2022)
 -------------------------------
 Added:
