@@ -5,6 +5,7 @@ from rezbuild.builder import ExtractBuilder
 from rezbuild.builder import InstallBuilder
 from rezbuild.builder import MacOSBuilder
 from rezbuild.builder import MacOSDmgBuilder
+from rezbuild.builder import MsiBuilder
 from rezbuild.builder import PythonBuilder
 from rezbuild.builder import PythonSourceArchiveBuilder
 from rezbuild.builder import PythonSourceBuilder
@@ -20,6 +21,7 @@ __all__ = [
     "InstallBuilder",
     "MacOSBuilder",
     "MacOSDmgBuilder",
+    "MsiBuilder",
     "PythonBuilder",
     "PythonSourceArchiveBuilder",
     "PythonSourceBuilder",

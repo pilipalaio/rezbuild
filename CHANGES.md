@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.15.0 (June, 7th, 2022)
+--------------------------------
+Added:
+  - `MsiInstaller`.
+  - `WindowsInstaller`.
+
+Changed:
+  - Add more documents.
+  - Improve docstring.
+  - `InstallBuilder.mode` to `InstallBuilder.get_mode`.
+
+Removed:
+  - `PythonBuilder.to_site_packages`.
+
 Version 0.14.1 (May, 8th, 2022)
 -------------------------------
 Added:

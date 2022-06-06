@@ -161,23 +161,23 @@ class InstallBuilder(RezBuilder, abc.ABC):
         structure should like this:
 
         source_root/
-            |___installers/
-                |___installer1
-                |___installer2
-                |___installer3
-                |___installer4
+        └── installers/
+            ├── installer1
+            ├── installer2
+            ├── installer3
+            └── installer4
 
         Or like this:
 
         source_root/
-            |___installers/
-                |___0/
-                    |___installer1
-                    |___installer2
-                    |___installer3
-                |___1/
-                    |___installer4
-                    |___installer5
+        └── installers/
+            ├── 0/
+            │   ├── installer1
+            │   ├── installer2
+            │   └── installer3
+            └── 1/
+                ├── installer4
+                └── installer5
 
         Args:
             local_path (str): The directory where the installers placed.
@@ -211,20 +211,11 @@ class InstallBuilder(RezBuilder, abc.ABC):
             return files
         elif self._search_mode == self.__class__.PYPI:
             raise NotImplementedError(
-                "PYPI mode does not implemented in this version.")
+                "PyPI mode does not implemented in this version.")
         else:
             raise ArgumentError(f"Mode {self._search_mode} unsupported.")
 
-    @classmethod
-    def list_modes(cls):
-        """List all the supported installer search modes.
-
-        Returns:
-            :obj:`list` of :obj:`int`: All supported installer search modes.
-        """
-        return [cls.LOCAL, cls.PYPI]
-
-    def mode(self):
+    def get_mode(self):
         """Return the current mode.
 
         Returns:
@@ -233,6 +224,15 @@ class InstallBuilder(RezBuilder, abc.ABC):
                 InstallerBuilder.PYPI -- 1
         """
         return self._search_mode
+
+    @classmethod
+    def list_modes(cls):
+        """List all the supported installer search modes.
+
+        Returns:
+            :obj:`list` of :obj:`int`: All supported installer search modes.
+        """
+        return [cls.LOCAL]
 
     def set_search_mode(self, mode):
         """Set search mode.
@@ -249,6 +249,44 @@ class InstallBuilder(RezBuilder, abc.ABC):
             self._search_mode = mode
         else:
             raise ArgumentError(f"Mode {self._search_mode} unsupported.")
+
+
+class WindowsBuilder(RezBuilder, abc.ABC):
+    """Base windows builder."""
+
+    pass
+
+
+class MsiBuilder(WindowsBuilder, InstallBuilder):
+    """Build rez package by msi files"""
+
+    @staticmethod
+    def install_msi(msi, install_path):
+        """Install msi file.
+
+        Args:
+            msi (str): The msi filepath to install.
+            install_path (str): The path to install msi file to.
+        """
+        cmds = [
+            "cmd.exe", "/c", "start", "/wait", "msiexec", "/a", msi, "/qn",
+            "/norestart", f"TARGETDIR={install_path}"
+        ]
+        subprocess.run(cmds, check=True)
+        _msi = os.path.join(install_path, os.path.basename(msi))
+        if os.path.isfile(_msi):
+            os.remove(_msi)
+
+    def custom_build(self, regex=r".+(\.msi)$"):
+        """Run msi build.
+
+        Args:
+            regex (str): The regex to match the installer name. Default will
+                match all the files with `.msi` suffix.
+        """
+        msis = self.get_installers(regex=regex)
+        for msi in msis:
+            self.install_msi(msi, self.workspace)
 
 
 class ExtractBuilder(InstallBuilder):
@@ -371,17 +409,19 @@ class MacOSBuilder(RezBuilder, abc.ABC):
 
     @staticmethod
     def create_open_shell(app_name, path, shell_name=""):
-        """Create shell to open macOS .app file.
+        """Create shell to open macOS `.app` file.
 
-        Shell name is all lowercase and replace the space to underscore.
+        The default shell name is the app_name that remove the ".app" suffix.
+        Shell name can't contain space. Spaces will be converted to underscore.
 
         Args:
             app_name (str): The macOS app name. Should end with `.app`.
             path (str): The directory path to put the shell to.
-            shell_name (str): The shell name to Specify to.
+            shell_name (str): The shell name to Specify to. Cannot contain
+                spaces.
         """
-        shell_name = (shell_name or
-                      app_name.lower().replace(".app", "").replace(" ", "_"))
+        shell_name = shell_name or app_name.replace(".app", "")
+        shell_name = shell_name.replace(" ", "_")
         shell_path = os.path.join(path, shell_name)
         with open(shell_path, "w") as shell:
             shell.write(SHELL_CONTENT.format(app_name=app_name))
@@ -500,27 +540,10 @@ class PythonBuilder(RezBuilder, abc.ABC):
                 shebang = shebang or "/usr/bin/env python"
                 make_bin_movable(bin_file, shebang)
 
-    @staticmethod
-    def install_wheel_by_pip(wheel_file, install_path):
-        """Install file by pip.
-
-        Args:
-            wheel_file (str): The path of the wheel file to install.
-            install_path (str): Path to install to.
-        """
-        command = [
-            "pip", "install", "--ignore-installed", "--no-deps",
-            "--no-compile", "--target", install_path, wheel_file]
-        print(f"\nInstall command: {' '.join(command)}")
-        subprocess.run(command, check=True)
-
     def install_wheel(
             self, wheel_file, install_path="", change_shebang=False,
             shebang=""):
         """Install wheel file.
-
-        This function will install wheel file, move python packages into
-        site-packages directory and change shebang if needed.
 
         Args:
             wheel_file (str): The path of the wheel file to install.
@@ -531,29 +554,13 @@ class PythonBuilder(RezBuilder, abc.ABC):
             shebang (str, optional): The shebang content you want to change to.
         """
         install_path = install_path or self.workspace
-        self.install_wheel_by_pip(wheel_file, install_path)
+        command = [
+            "pip", "install", "--ignore-installed", "--no-deps",
+            "--no-compile", "--target", install_path, wheel_file]
+        print(f"\nInstall command: {' '.join(command)}")
+        subprocess.run(command, check=True)
         if change_shebang:
             self.change_shebang(shebang=shebang)
-
-    def to_site_packages(self, ignores=None):
-        """Copy python file to site-packages directory.
-
-        Args:
-            ignores (:obj:`list` of :obj:`str`): The folder or file names
-                which will be ignored when copy to site-package.
-        """
-        site_packages_path = os.path.join(self.workspace, "site-packages")
-        if os.path.exists(site_packages_path):
-            remove_tree(site_packages_path)
-        os.makedirs(site_packages_path)
-        if ignores is None:
-            ignores = ["bin", "site-packages"]
-        if "site-packages" not in ignores:
-            ignores.append("site-packages")
-        for filename in os.listdir(self.workspace):
-            if filename not in ["bin", "site-packages"]:
-                src = os.path.join(self.workspace, filename)
-                shutil.move(src, site_packages_path)
 
 
 class PythonSourceBuilder(PythonBuilder):

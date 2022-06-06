@@ -8,28 +8,23 @@ Rezbuild is a python library for build rez packages. Please visit the
 
 ## Description
 
-### Goal
+This project is a tool to build rez packages. It simplifies the build process.
 
-This project is a build tool to build rez packages. We always need to do some
-of the same steps when we build a rez package. Just like extract zip file,
-install the wheel file using pip, copy files to the installation directory. The
-goal of this project is to cover all the repetitive work when building rez
-package.
+Rezbuild support build rez package by python wheel, python source archive,
+python source, archive file, unix source, macOS pkg and macOS dmg.
 
-## Getting Started
+## Installation
 
 ### requisites
 
 Rezbuild requires the python-3.6+, build-0.3+(lower version did not test) and
-pip-18+ to run. If you want to install this package from source, git and
-setuptools_scm are also needed.
+pip-18+ to run.
 
-### Installing
+### Install
 
 There are 3 ways to install rezbuild, choose according to your own situation.
 
-1.Install by source for rez(New in rezbuild, or do not have rezbuild in you
-environment)
+#### 1.Install by source for rez(New in rezbuild, or do not have rezbuild in you environment)
 
 If you are new in rezbuild, or there's no other version of rezbuild in you rez
 environment, you can use rez to install this package from source. Make sure all
@@ -44,20 +39,21 @@ cd rezbuild
 rez build -i
 ```
 
-2.Install by itself(Need rezbuild in you rez repository)
+#### 2.Install by itself(Need rezbuild in you rez repository)
 
-The recommended way to install this package is using itself. Make sure you have
-all the requirements are installed into rez environment, include rezbuild
-(another version of this package).
-Download wheel file from [PyPI](https://pypi.org/project/rezbuild/#files)
-And then create a directory like this:
+Rezbuild can install by itself. Make sure you have all the requirements are
+installed into rez environment, include rezbuild (another version of this
+package). Download wheel file from
+[PyPI](https://pypi.org/project/rezbuild/#files). Then create a directory like
+this:
 
 ```text
 install_rezbuild/
-    |___installers/
-        |___rezbuild-0.5.0-py3-none-any.whl
-    |___build.py
-    |___package.py
+├── build.py
+├── package.py
+└── installers/
+    └── rezbuild-0.14.1-py3-none-any.whl
+
 ```
 
 The content of build.py can be like this:
@@ -70,6 +66,7 @@ from rezbuild.builder import PythonWheelBuilder
 if __name__ == '__main__':
     builder = PythonWheelBuilder()
     builder.build()
+
 ```
 
 The content of package.py can be like this:
@@ -95,12 +92,13 @@ build_command = 'python {root}/build.py {install}'
 
 def commands():
     env.PYTHONPATH.append("{root}/site-packages")
+
 ```
 
 Then, run this command in the root directory `rez build -i`.
 After that, this package will be installed as a rez package.
 
-3.Install from pypi
+#### 3.Install from pypi
 
 Of course, you can install this package from pip
 
@@ -113,11 +111,8 @@ time.
 
 ## Usage
 
-After 2.70.0, rez removed the bez build system. So the docs is based on 
+After 2.70.0, rez removed the bez build system. So rezbuild based on
 rez-2.70.0.
-
-Rezbuild support different build types, like build from whl file, build from
-source, or you can customize you build function.
 
 ### Build from python wheel file(PythonWheelBuilder)
 
@@ -145,10 +140,10 @@ the file into `source_root/installers`. The tree should like this:
 
 ```text
 source_root/
-    |___installers/
-        |___the_package_you_want_to_install.whl
-    |___build.py
-    |___package.py
+├── build.py
+├── package.py
+└── installers/
+    └── the_package_you_want_to_install.whl
 ```
 
 Finally, change directory to source_root and run the command `rez build -i`,
@@ -156,8 +151,25 @@ the package will be installed.
 
 ### Build from python source code(PythonSourceBuilder)
 
-The only different between build from wheel file is the builder. Change the
-content of `build.py` like this:
+PythonSourceBuilder is used to build rez package from python source which
+meeting the requirements of Python official structure. The source structure
+please refer to
+[python official website](https://packaging.python.org/en/latest/tutorials/packaging-projects/).
+The source structure should like this:
+
+```text
+source_root/
+├── build.py
+├── package.py
+├── pyproject.toml
+├── setup.cfg
+└── src/
+    └── module/
+        └── __init__.py
+
+```
+
+The content of `build.py`:
 
 ```python
 # Import third-party modules
@@ -166,17 +178,100 @@ from rezbuild import PythonSourceBuilder
 
 if __name__ == '__main__':
     PythonSourceBuilder().build()
+
 ```
 
 Then ensure you already make all the necessary files to build a python package.
-Check with this 
-[tutorial](https://packaging.python.org/tutorials/packaging-projects/).
-`PythonSourceBuilder` will use the official default way(build) to build the
-package.
+`PythonSourceBuilder` will use the official way to build the package.
 
 Then run the command `rez build -i`, the package will be build and installed.
 
-###Build from dmg file(MacOSDmgBuilder)
+### Build from the python source archive file
+
+Some packages only supply the python source archive file, we can use the
+PythonSourceArchiveBuilder builder to build.
+
+### Copy build(CopyBuilder)
+
+Sometimes we don't want to use the official way to build rez package(metadata
+will be missing if we don't use the official way), but only copy the code. Use
+CopyBuilder can build package by only copy the source code. The default source
+path is the folder named `src` under the source root. Pass the path to the root
+parameter in build method to custom the source path. build.py file should like
+this:
+
+```python
+# Import built-in modules
+import os
+
+# Import third-party modules
+from rezbuild import CopyBuilder
+
+
+if __name__ == '__main__':
+    builder = CopyBuilder()
+    builder.build(root=os.path.join(builder.source_path, "example_package"))
+
+```
+
+### Build from Archive file(ExtractBuilder)
+
+ExtractBuilder can extract the archive file to build rez package.
+ExtractBuilder now support zip, tar.gz, tar.xz and 7z.exe.
+
+`build.py`:
+
+```python
+# Import third-party modules
+from rezbuild import ExtractBuilder
+
+
+if __name__ == '__main__':
+    ExtractBuilder().build()
+
+```
+
+Put the archive file into `installers` folder.
+
+```text
+source_root/
+├── build.py
+├── package.py
+└── installers/
+    └── archive.zip
+
+```
+
+### Build from source code(CompileBuilder)
+
+CompileBuilder support use `configure` and `make` command to build package
+on Linux and macOS. The arguments of configure is passed by the
+extra_config_args parameter of CompileBuilder.build method.
+
+`build.py` 如下:
+
+```python
+# Import third-party modules
+from rezbuild import CompileBuilder
+
+
+if __name__ == '__main__':
+    CompileBuilder().build(extra_config_args=["LDFLAGS=-L/path/to/lib"])
+
+```
+
+Put the source archive file into installers folder.
+
+```text
+source_root/
+├── build.py
+├── package.py
+└── installers/
+    └── git-2.32.0.tar.gz
+
+```
+
+### Build from dmg file(MacOSDmgBuilder)
 
 Make `build.py` like this:
 
@@ -193,10 +288,10 @@ Put archive file into `installers` folder.
 
 ```text
 source_root/
-    |___installers/
-        |___installer.dmg
-    |___build.py
-    |___package.py
+├── build.py
+├── package.py
+└── installers/
+    └── installer.dmg
 ```
 
 Then run command `rez build -i` from `source_root`.
@@ -204,56 +299,6 @@ Then run command `rez build -i` from `source_root`.
 `MacOSDmgBuilder` will create a shell script in the package root, has a same
 with the `.app` folder. Set `create_shell` to `False` to prevent his creation.
 For example: `MacOSDmgBuilder().build(create_shell=False)`
-
-### Build from archive file(ExtractBuilder)
-
-Make `build.py` like this:
-
-```python
-# Import third-party modules
-from rezbuild import ExtractBuilder
-
-
-if __name__ == '__main__':
-    ExtractBuilder().build()
-```
-
-Put archive file into `installers` folder.
-
-```text
-source_root/
-    |___installers/
-        |___archive.zip
-    |___build.py
-    |___package.py
-```
-
-Then run command `rez build -i` from `source_root`.
-
-### Build from source by compile(CompileBuilder)
-
-Make `build.py` like this:
-
-```python
-# Import third-party modules
-from rezbuild import CompileBuilder
-
-
-if __name__ == '__main__':
-    CompileBuilder().build()
-```
-
-Put source archive file into installers folder.
-
-```text
-source_root/
-    |___installers/
-        |___git-2.32.0.tar.gz
-    |___build.py
-    |___package.py
-```
-
-Run command `rez build -i` from `source_root`.
 
 ### Custom builder
 
@@ -306,6 +351,51 @@ git/
 ```
 
 Rezbuild will get all the installers under the variant folder when building it.
+
+## API
+
+### builder module
+
+### RezBuilder()
+
+`RezBuilder` is the root builder, any other builder is inherited from it. 
+RezBuilder load the environment variables, makesure the workspace, install the
+package and execute the custom build method.
+
+### RezBuilder.build_path
+
+Build path. The rez default directory.
+
+### RezBuilder.install_path
+
+Install path. Default is ~/packages.
+
+### RezBuilder.source_path
+
+The source path.
+
+### RezBuilder.workspace
+
+Workspace. All the files and folders will be copied to the installation path.
+
+### RezBuilder.name
+
+Package name.
+
+### RezBuilder.version
+
+Build version.
+
+### RezBuilder.variant_index
+
+Variant index.
+
+### RezBuilder.build(**kwargs) -> None
+
+Build method, trigger the build process. This method will invoke the custom
+build method of the subclass to run the build.
+
+kwargs: Accept all the key word arguments to pass to the custom_build method.
 
 ## Versioning
 
