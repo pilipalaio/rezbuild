@@ -376,9 +376,9 @@ git/
 
 ### RezBuilder.build(**kwargs) -> None
 
-构建方法, 触发构建流程. 该方法会调用子类的 custom_build 方法来执行具体的构建.
+构建方法, 触发构建流程. 该方法会调用子类的 `custom_build` 方法来执行具体的构建.
 
-kwargs: 接受所有命名参数并传递给 custom_build 方法.
+kwargs: 接受所有命名参数并传递给 `custom_build` 方法.
 
 ### CopyBuilder() -> None
 
@@ -386,28 +386,34 @@ kwargs: 接受所有命名参数并传递给 custom_build 方法.
 
 ### CopyBuilder.build(root) -> None
 
+触发构建。
+
 root: 此目录下的所有文件都会被拷贝到安装目录中. 默认为源代码目录下的src文件夹.
 
 ### InstallBuilder(mode=None)
 
 基类, 所有需要安装文件的 builder 都继承于此类.
 
-mode(int): 获取安装文件的模式. 目前仅支持本地模式(InstallBuilder.LOCAL). 若不指定则默认为
-本地模式.
+mode(int): 获取安装文件的模式. 目前仅支持本地模式(`InstallBuilder.LOCAL`). 若不指定则默
+认为本地模式.
 
-InstallBuilder.LOCAL(int): 模式标识, 此标识表示安装包的获取模式为本地模式.
+### InstallBuilder.LOCAL
 
-REZBUILD_SEARCH_MODE: 环境变量, 用于指定默认搜索模式. 若在初始化 InstallBuilder 时未指定
-mode 参数, 则抓取此环境变量设置的值. 当使用本地模式(InstallBuilder.LOCAL)时,
-应将此环境变量设置为0. 目前仅支持本地模式. 若未指定环境变量则默认为本地模式.
+int: 模式标识, 此标识表示安装包的获取模式为本地模式.
+
+REZBUILD_SEARCH_MODE: 环境变量, 用于指定默认搜索模式. 若在初始化 `InstallBuilder` 时未
+指定 mode 参数, 则抓取此环境变量设置的值. 若未指定环境变量则默认为本地模式.
+
+可选值:
+- 0 -- 本地模式
 
 ### InstallBuilder.get_installers(local_path=None, regex=None) -> list(str)
 
-搜索指定目录, 返回一个包含所有符合要求的安装文件完整路径的列表. 若有多个变体(variant), 
-则会获取当前变体的安装文件. 本地模式下(InstallBuilder.LOCAL), 若不指定 local_path, 
+搜索指定位置, 返回一个包含所有符合要求的安装文件完整路径的列表. 若有多个变体(variant), 
+则会获取当前变体的安装文件. 本地模式下(`InstallBuilder.LOCAL`), 若不指定 `local_path`, 
 则搜索目录默认为源代码根目录下 installers 文件夹. 
 
-搜索目录下的所有文件均会被列出并返回. 若需要控制文件的匹配规则, 可以使用 regex
+搜索目录下的所有文件均会被列出并返回. 若需要控制文件的匹配规则, 可以使用 `regex`
 函数传入正则表达式, 匹配正则表达式的安装文件名才会被返回. 
 
 含有变体(variants)的包会优先寻找搜索目录下是否含有与变体索引(REZ_BUILD_VARIANT_INDEX)
@@ -477,9 +483,9 @@ get_installers 方法可以获取到
 
 extra_config_args(list(str)): configure 参数。
 
-installer_regex: 归档文件正则表达式. 文件名与正则表达式匹配的文件才会被解压.
+installer_regex(str): 归档文件正则表达式. 文件名与正则表达式匹配的文件才会被解压.
 
-install_path: 指定安装路径。若为空则默认为 workspace.
+install_path(str): 指定安装路径。若为空则默认为 workspace.
 
 ### CompileBuilder.compile(source_path, install_path, extra_config_args=None) -> None
 
@@ -503,27 +509,27 @@ extra_config_args(list(str)): configure 参数.
 
 创建一个可以打开指定 macOS app 的 shell 脚本. 
 
-app_name: macOS app 的名字.
+app_name(str): macOS app 的名字.
 
-path: 脚本存放目录.
+path(str): 脚本存放目录.
 
-shell_name: 指定脚本的名字。默认为 app_name.
+shell_name(str): 指定脚本的名字。默认为 app_name.
 
 ### MacOSBuilder.extract_dmg(dmg_file, extract_path) -> None
 
 解压缩 dmg 格式的 macOS 安装文件.
 
-dmg_file: dmg 安装文件的路径.
+dmg_file(str): dmg 安装文件的路径.
 
-extract_path: 解压缩文件的存放位置.
+extract_path(str): 解压缩文件的存放位置.
 
 ### MacOSBuilder.extract_pkg(pkg_file, extract_path) -> None
 
 解压缩 pkg 格式的 macOS 安装文件.
 
-pkg_file: pkg 安装文件的路径.
+pkg_file(str): pkg 安装文件的路径.
 
-extract_path: 解压缩文件的存放位置.
+extract_path(str): 解压缩文件的存放位置.
 
 ### MacOSDmgBuilder()
 
@@ -548,8 +554,8 @@ python 的绝对路径。此方法可以修改该路径为抓取环境中指定�
 
 root(str): entry_point 文件所在目录。该目录下所有文件均会被检测并修改 shebang.
 
-shebang(str): 指定 shebang 被修改为何值. 如不提供, windows 下默认为
-`#!python(w).exe`, macOS 下默认为 #!/usr/bin/env python.
+shebang(str): 指定 shebang 被修改为何值. 如不提供, Windows 下默认为
+`#!python(w).exe`, macOS 下默认为 `#!/usr/bin/env python`.
 
 ### PythonBuilder.install_wheel(wheel_file, install_path="", change_shebang=False, shebang="") -> None
 
@@ -616,6 +622,14 @@ change_shebang(bool): 是否修改 entry_point 文件中的 shebang. 默认为�
 
 shebang(str): 指定 shebang 被修改为何值. 如不提供, windows 下默认为
 `#!python(w).exe`, macOS 下默认为 #!/usr/bin/env python.
+
+### 环境变量
+
+REZBUILD_SEARCH_MODE: 环境变量, 用于指定默认搜索模式. 若在初始化 InstallBuilder 时未指定
+mode 参数, 则抓取此环境变量设置的值. 若未指定环境变量则默认为本地模式.
+
+可选值:
+- 0 -- 本地模式
 
 ## 版本管理
 

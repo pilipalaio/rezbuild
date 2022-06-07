@@ -341,13 +341,14 @@ variant index under the `installers` folder. For example:
 
 ```text
 git/
-    |___installers/
-        |___0
-            |___PortableGit-2.32.0.2-64-bit.7z.exe
-        |___1
-            |___git-2.32.0.tar.xz
-    |___build.py
-    |___package.py
+├── build.py
+├── package.py
+└── installers/
+    ├── 0
+    │   └── PortableGit-2.32.0.2-64-bit.7z.exe
+    └── 1
+        └── git-2.32.0.tar.xz
+
 ```
 
 Rezbuild will get all the installers under the variant folder when building it.
@@ -359,36 +360,37 @@ Rezbuild will get all the installers under the variant folder when building it.
 ### RezBuilder()
 
 `RezBuilder` is the root builder, any other builder is inherited from it. 
-RezBuilder load the environment variables, makesure the workspace, install the
+RezBuilder load the environment variables, make sure the workspace, install the
 package and execute the custom build method.
 
 ### RezBuilder.build_path
 
-Build path. The rez default directory.
+str: Build path. The rez default directory.
 
 ### RezBuilder.install_path
 
-Install path. Default is ~/packages.
+str: Install path. Default is ~/packages.
 
 ### RezBuilder.source_path
 
-The source path.
+str: The source path.
 
 ### RezBuilder.workspace
 
-Workspace. All the files and folders will be copied to the installation path.
+str: Workspace. All the files and folders will be copied to the installation
+path.
 
 ### RezBuilder.name
 
-Package name.
+str: Package name.
 
 ### RezBuilder.version
 
-Build version.
+str: Build version.
 
 ### RezBuilder.variant_index
 
-Variant index.
+str: Variant index.
 
 ### RezBuilder.build(**kwargs) -> None
 
@@ -396,6 +398,286 @@ Build method, trigger the build process. This method will invoke the custom
 build method of the subclass to run the build.
 
 kwargs: Accept all the key word arguments to pass to the custom_build method.
+
+### CopyBuilder() -> None
+
+Copy all the files into the installation directory(`this.root`).
+
+### CopyBuilder.build(root="") -> None
+
+root(str): All the files under this root will be copied into installation
+directory. Default is the src folder under the source
+path(RezBuilder.source_path).
+
+### InstallBuilder(mode=None)
+
+Abstract Base Classes, all builders that require installation files are
+inherited from this class.
+
+mode(int): The search mode of get installers. Now only support local
+mode(InstallBuilder.LOCAL). Default is the local mode.
+
+### InstallBuilder.LOCAL
+
+int: Mode flag. This flag indicates that using local mode. Local mode will
+search a local path to get the installers. 
+
+REZBUILD_SEARCH_MODE: Environment variables, used to set the search mode.
+`InstallBuilder` will get this value if the mode parameter is not provided
+during initialization. Default is the local mode if the environment variables
+is not provided.
+
+Supported value:
+- 0 -- local mode
+
+### InstallBuilder.get_installers(local_path=None, regex=None) -> list(str)
+
+Search the specified place and return a list of installation file path that
+required the satisfied. Will return the file for the current variant if the
+package has more than on variants. The default search path is the folder named
+installers under the source root(InstallBuilder.source_root) in local
+mode(`InstallBuilder.LOCAL`) if `local_path` is not specified.
+
+All the files will be list in the result. Pass a regex to the `regex` parameter
+will return the files that only file name match it.
+
+Multi-variant package will search the folder that name same with the variant
+index first if the folder exist in the search path. The tree should like this:
+
+```text
+source_root/
+├── build.py
+├── package.py
+└── installers/
+    ├── 0/
+    │   ├── installer1
+    │   ├── installer2
+    │   └── installer3
+    └── 1/
+        ├── installer4
+        └── installer5
+
+```
+
+local_path(str): Specify the installation file search path. Default is the 
+folder named installers under the source root(InstallBuilder.source_root).
+Local mode only. 
+
+regex(str): The regular expression to match the installation files. Only the
+file that name match the expression will be return if the parameter not empty.
+
+### ExtractBuilder()
+
+This builder will extract the archive file and copy the content into install
+path(`RezBuilder.install_path`).
+
+### ExtractBuilder.extract(extract_path, installer_regex=None) -> None
+
+Extract archive into the specified path(`extract_path`).
+
+extract_path(str): Target path to put the files that extract from the archive.
+
+installer_regex(str): The regular expression to match the installation files.
+Only the file that name match the expression will be extracted.
+
+### ExtractBuilder.get_installers(local_path=None, regex=None) -> list(str)
+
+Inherit from `InstallBuilder.get_installers`.
+
+### ExtractBuilder.build(extract_path=None, installer_regex=None, dirs_exist_ok=True, follow_symlinks=True, file_overwrite=False) -> None
+
+Extract archive files and copy into the installation
+path(`RezBuilder.install_path`).
+
+extract_path(str): Where to put the files that extract from the archive.
+Default is using the temporary folder.
+
+installer_regex(str): The regular expression to match the installation files.
+Only the file that name match the expression will be extracted. Extract all the
+archive files that `get_installers` returned if not provided.
+
+dirs_exist_ok(bool): Whether to merge the same name folder when copy files.
+`True` will merge the directories, `False` will raise an exception. 
+
+follow_symlinks(bool): If follow_symlinks is false and src is a symbolic link,
+a new symbolic link will be created instead of copying the file src points to.
+
+file_overwrite(bool): Whether to overwrite the file with the same name. `True`
+will overwrite, otherwise `False`.
+
+### CompileBuilder()
+
+Extract source archive file, compile and copy to installation directory.
+The source archive file format should be zip or tar.gz.
+
+### CompileBuilder.build(extra_config_args=None, installer_regex=None, install_path=None, make_movable=False) -> None
+
+Build the package.
+
+extra_config_args(list(str)): configure arguments。
+
+installer_regex(str): The regular expression to match the archive files.
+Only the file that name match the expression will be extracted.
+
+install_path(str): Specify the path to put the compiled file. Default is the
+workspace(RezBuilder.workspace).
+
+### CompileBuilder.compile(source_path, install_path, extra_config_args=None) -> None
+
+Compile source code by configure and make command.
+
+source_path(str): Where the source code placed.
+
+install_path(str): Where to put the compiled file.
+
+extra_config_args(list(str)): configure arguments.
+
+### CompileBuilder.get_installers(local_path=None, regex=None) -> list(str)
+
+Inherit from InstallBuilder.get_installers
+
+## MacOSBuilder()
+
+Abstract Base Classes, all the macOS builder inherit from this class.
+
+### MacOSBuilder.create_open_shell(app_name, path, shell_name="") -> None
+
+Create a shell script to open the macOS app.
+
+app_name(str): macOS app name.
+
+path(str): Directory to put the shell script.
+
+shell_name(str): Shell name. Default is the app_name replaced the space to
+underscore.
+
+### MacOSBuilder.extract_dmg(dmg_file, extract_path) -> None
+
+Extract the macOS installation file with dmg format.
+
+dmg_file(str): dmg file.
+
+extract_path(str): Directory to put the extract files.
+
+### MacOSBuilder.extract_pkg(pkg_file, extract_path) -> None
+
+Extract the macOS installation file with pkg format.
+
+pkg_file(str): pkg file.
+
+extract_path(str): Directory to put the extract files.
+
+### MacOSDmgBuilder()
+
+Build package from dmg installation file.
+
+### MacOSDmgBuilder.build(create_shell=True, shell_name="")
+
+Build the package.
+
+create_shell(str): Whether to create shell script.
+
+shell_name(str): Specify shell name. Only takes effect when create_shell is
+`True`.
+
+### PythonBuilder()
+
+Abstract Base Classes, all the python builder inherit from this class.
+
+### PythonBuilder.change_shebang(root="", shebang="")
+
+Modified the shebang of entry_points. entry_point will hardcode the python path
+when pip install the wheel file. This method will modify the shebang to get the
+python executable from environment.
+
+root(str): entry_point directory。All the files under this directory will be
+checked and modified the shebang.
+
+shebang(str): Specify the value of shebang to change to. On Windows, default is
+`#!python(w).exe`. On macOS, default is `#!/usr/bin/env python`.
+
+### PythonBuilder.install_wheel(wheel_file, install_path="", change_shebang=False, shebang="") -> None
+
+Installation wheel file.
+
+wheel_file(str): Wheel file to install.
+
+install_path(str): Directory to install wheel. Default is
+`RezBuilder.workspace`.
+
+change_shebang(bool): Whether to modify the shebang of entry point. Default is
+`False`.
+
+shebang(str): Specify the value of shebang to change to. On Windows, default is
+`#!python(w).exe`. On macOS, default is `#!/usr/bin/env python`.
+
+### PythonSourceBuilder()
+
+PythonSourceBuilder is used to build rez package from python source which
+meeting the requirements of Python official structure. The source structure
+please refer to
+[python official website](https://packaging.python.org/en/latest/tutorials/packaging-projects/).
+The source structure should like this:
+
+```text
+source_root/
+├── build.py
+├── package.py
+├── pyproject.toml
+├── setup.cfg
+└── src/
+    └── module/
+        └── __init__.py
+
+```
+
+### PythonSourceBuilder.build(change_shebang=False, use_venv=True, shebang="") -> None
+
+Build the package.
+
+change_shebang(bool): Whether to modify the shebang of entry point. Default is
+`False`.
+
+use_venv(bool): Whether to use venv when build wheel file. Default is `True`. 
+
+shebang(str): Specify the value of shebang to change to. On Windows, default is
+`#!python(w).exe`. On macOS, default is `#!/usr/bin/env python`.
+
+### PythonSourceArchiveBuilder()
+
+Build package by python source archive file.
+
+### PythonSourceArchiveBuilder.build(change_shebang=False, use_venv=True, shebang="") -> None
+
+change_shebang(bool): Whether to modify the shebang of entry point. Default is
+`False`.
+
+use_venv(bool): Whether to use venv when build wheel file. Default is `True`.
+
+shebang(str): Specify the value of shebang to change to. On Windows, default is
+`#!python(w).exe`. On macOS, default is `#!/usr/bin/env python`.
+
+### PythonWheelBuilder()
+
+Build package by python wheel file.
+
+### PythonWheelBuilder.build(change_shebang=False, shebang="") -> None
+
+change_shebang(bool): Whether to modify the shebang of entry point. Default is
+`False`.
+
+shebang(str): Specify the value of shebang to change to. On Windows, default is
+`#!python(w).exe`. On macOS, default is `#!/usr/bin/env python`.
+
+### Environment variables
+
+REZBUILD_SEARCH_MODE: Environment variables, used to set the search mode.
+`InstallBuilder` will get this value if the mode parameter is not provided
+during initialization. Default is the local mode if the environment variables
+is not provided.
+
+Supported value:
+- 0 -- local mode
 
 ## Versioning
 
