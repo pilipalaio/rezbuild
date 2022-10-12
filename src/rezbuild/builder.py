@@ -305,7 +305,26 @@ class ExtractBuilder(InstallBuilder):
         for installer in self.get_installers(regex=installer_regex):
             if installer.split(".")[-1] in ["gz", "xz"]:
                 with tarfile.open(installer, "r") as tar:
-                    tar.extractall(extract_path)
+                    def is_within_directory(directory, target):
+                        
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                    
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        
+                        return prefix == abs_directory
+                    
+                    def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                    
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise Exception("Attempted Path Traversal in Tar File")
+                    
+                        tar.extractall(path, members, numeric_owner=numeric_owner) 
+                        
+                    
+                    safe_extract(tar, extract_path)
             elif installer.endswith("7z.exe"):
                 name = os.path.basename(installer).split(".")[0]
                 extract_path = os.path.join(extract_path, name)
@@ -648,7 +667,26 @@ class PythonSourceArchiveBuilder(PythonSourceBuilder, InstallBuilder):
         archives = [archive for archive in self.get_installers()
                     if archive.endswith(".tar.gz")]
         with tarfile.open(archives[0], "r") as file:
-            file.extractall(self.build_path)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(file, self.build_path)
         dirname = os.path.basename(archives[0]).replace(".tar.gz", "")
         source_root = os.path.join(self.build_path, dirname)
         wheel_file = self.create_wheel(source_root, use_venv=use_venv)
