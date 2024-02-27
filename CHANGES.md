@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Version 0.16.0 (February, 27th, 2024)
+-------------------------------------
+Added:
+  - `PythonWheelBuilder.custom_build` add new parameter `wheel_install_path`.
+
+Changed:
+  - Use `python -m pip` instead of `pip`.
+
 Version 0.15.1 (June, 8th, 2022)
 --------------------------------
 Changed:

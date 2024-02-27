@@ -553,14 +553,15 @@ class PythonBuilder(RezBuilder, abc.ABC):
                 directory. Default is False.
             shebang (str, optional): The shebang content you want to change to.
         """
-        install_path = install_path or self.workspace
+        install_path = install_path or os.path.join(self.workspace, "python")
         command = [
-            "pip", "install", "--ignore-installed", "--no-deps",
+            "python", "-m", "pip", "install", "--ignore-installed", "--no-deps",
             "--no-compile", "--target", install_path, wheel_file]
         print(f"\nInstall command: {' '.join(command)}")
         subprocess.run(command, check=True)
         if change_shebang:
-            self.change_shebang(shebang=shebang)
+            bin_root = os.path.join(install_path, "bin")
+            self.change_shebang(shebang=shebang, root=bin_root)
 
 
 class PythonSourceBuilder(PythonBuilder):
@@ -660,13 +661,15 @@ class PythonSourceArchiveBuilder(PythonSourceBuilder, InstallBuilder):
 class PythonWheelBuilder(PythonBuilder, InstallBuilder):
     """Build the external package from python wheel file."""
 
-    def custom_build(self, change_shebang=False, shebang=""):
+    def custom_build(
+            self, change_shebang=False, shebang="", wheel_install_path=""):
         """Build package from wheel file.
 
         Args:
             change_shebang (bool): Whether to change shebang from bin
                 directory.
             shebang (str): The shebang content you want to change to.
+            wheel_install_path (str): The path that wheel file install to.
         """
         wheels = [wheel for wheel in self.get_installers()
                   if wheel.endswith(".whl")]
@@ -674,4 +677,5 @@ class PythonWheelBuilder(PythonBuilder, InstallBuilder):
             raise InstallerNotFoundError("Wheel installer file not found.")
         self.install_wheel(
             # Python installer always only one whl file.
-            wheels[0], change_shebang=change_shebang, shebang=shebang)
+            wheels[0], change_shebang=change_shebang, shebang=shebang,
+            install_path=wheel_install_path)
